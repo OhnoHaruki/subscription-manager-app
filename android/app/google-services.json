@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "607600253943",
+    "project_id": "subscription-manager-gori",
+    "storage_bucket": "subscription-manager-gori.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:607600253943:android:40347355e2d44151ac6cf2",
+        "android_client_info": {
+          "package_name": "co.jp.optim.subscription_manager"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDtQ455lyoO9QSfA443IvbWbJ1FI4JEPVI"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

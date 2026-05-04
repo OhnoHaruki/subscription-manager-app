@@ -16,7 +16,16 @@
       "Bash(~/.asdf/shims/flutter doctor *)",
       "Bash(~/.asdf/shims/flutter create *)",
       "Bash(git add *)",
-      "Bash(git commit -m ' *)"
+      "Bash(git commit -m ' *)",
+      "Bash(~/.asdf/shims/flutter pub *)",
+      "Bash(~/.asdf/shims/dart pub *)",
+      "Bash(npm list *)",
+      "Bash(~/.asdf/shims/npm install *)",
+      "Bash(bun --version)",
+      "Bash(curl -fsSL https://bun.sh/install)",
+      "Bash(bash)",
+      "Bash(~/.bun/bin/bun *)",
+      "Bash(~/.bun/bin/firebase *)"
     ]
   },
   "enableAllProjectMcpServers": true,
