@@ -92,16 +92,54 @@ MVPでは、次のような画面を想定しています。
 
 その後、通知機能やGmail連携などを追加し、支払い失敗の予防や解約手続きの効率化につなげていきます。
 
-## セットアップ予定
+## セットアップ
 
-Flutterプロジェクト作成後、以下の手順で開発環境を整える予定です。
+### 前提条件
+
+| ツール | 用途 | インストール方法 |
+| --- | --- | --- |
+| [asdf](https://asdf-vm.com/) | Flutter バージョン管理 | 公式ドキュメント参照 |
+| [bun](https://bun.sh/) | Firebase CLI のインストール | `curl -fsSL https://bun.sh/install \| bash` |
+
+### 手順
+
+#### 1. Flutter のセットアップ
 
 ```bash
+# asdf で Flutter をインストール（.tool-versions のバージョンが使われる）
+asdf plugin add flutter
+asdf install
+
+# 依存パッケージのインストール
 flutter pub get
-flutter run
 ```
 
-Firebaseを利用するため、Firebaseプロジェクトの作成とFlutterアプリへの接続設定も行います。
+#### 2. Firebase CLI・FlutterFire CLI のセットアップ
+
+```bash
+# Firebase CLI のインストール
+bun install -g firebase-tools
+
+# FlutterFire CLI のインストール
+dart pub global activate flutterfire_cli
+
+# Firebase にログイン
+firebase login
+```
+
+#### 3. Firebase プロジェクトの接続
+
+[Firebase Console](https://console.firebase.google.com/) でプロジェクトを作成し、Authentication と Firestore を有効化した後:
+
+```bash
+flutterfire configure
+```
+
+#### 4. アプリの起動
+
+```bash
+flutter run
+```
 
 ## ライセンス
 
