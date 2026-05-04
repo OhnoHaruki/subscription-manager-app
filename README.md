@@ -106,8 +106,11 @@ MVPでは、次のような画面を想定しています。
 #### 1. Flutter のセットアップ
 
 ```bash
-# asdf で Flutter をインストール（.tool-versions のバージョンが使われる）
+# asdf プラグインを追加（.tool-versions で flutter / nodejs 両方を管理）
 asdf plugin add flutter
+asdf plugin add nodejs
+
+# .tool-versions のバージョンを一括インストール
 asdf install
 
 # 依存パッケージのインストール
