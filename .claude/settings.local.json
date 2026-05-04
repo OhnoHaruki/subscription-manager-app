@@ -25,7 +25,11 @@
       "Bash(curl -fsSL https://bun.sh/install)",
       "Bash(bash)",
       "Bash(~/.bun/bin/bun *)",
-      "Bash(~/.bun/bin/firebase *)"
+      "Bash(~/.bun/bin/firebase *)",
+      "Bash(~/.asdf/shims/flutter analyze *)",
+      "Bash(~/.asdf/shims/flutter run *)",
+      "Bash(git push *)",
+      "Bash(gh pr *)"
     ]
   },
   "enableAllProjectMcpServers": true,
