@@ -1,0 +1,26 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(gh auth *)",
+      "Bash(gh issue *)",
+      "Bash(git checkout *)",
+      "Bash(flutter --version)",
+      "Bash(asdf plugin *)",
+      "Bash(asdf list *)",
+      "Bash(asdf install *)",
+      "Bash(wait)",
+      "Bash(asdf local *)",
+      "Bash(export PATH=\"$PATH:$HOME/.asdf/shims\")",
+      "Bash(asdf set *)",
+      "Bash(~/.asdf/shims/flutter --version)",
+      "Bash(~/.asdf/shims/flutter doctor *)",
+      "Bash(~/.asdf/shims/flutter create *)",
+      "Bash(git add *)",
+      "Bash(git commit -m ' *)"
+    ]
+  },
+  "enableAllProjectMcpServers": true,
+  "enabledMcpjsonServers": [
+    "redmine"
+  ]
+}
