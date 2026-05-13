@@ -151,6 +151,9 @@ class _AddSubscriptionScreenState extends ConsumerState<AddSubscriptionScreen> {
               ],
               validator: (value) {
                 if (value == null || value.isEmpty) return '金額を入力してください';
+                // 全角が含まれていないかチェック
+                if (RegExp(r'[０-９]').hasMatch(value)) return '半角数字で入力してください';
+                
                 final amountText = value.replaceAll(',', '');
                 final amount = int.tryParse(amountText);
                 if (amount == null) return '有効な数値を入力してください';
