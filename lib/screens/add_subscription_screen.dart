@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import '../models/subscription.dart';
@@ -116,9 +117,14 @@ class _AddSubscriptionScreenState extends ConsumerState<AddSubscriptionScreen> {
               decoration: const InputDecoration(
                 labelText: 'サービス名',
                 hintText: '例: Netflix, Spotifyなど',
+                counterText: '', // 文字数カウンターを表示しない
               ),
-              validator: (value) =>
-                  (value == null || value.isEmpty) ? 'サービス名を入力してください' : null,
+              maxLength: 50,
+              validator: (value) {
+                if (value == null || value.isEmpty) return 'サービス名を入力してください';
+                if (value.length > 50) return '50文字以内で入力してください';
+                return null;
+              },
             ),
             const SizedBox(height: 16),
             
@@ -129,10 +135,20 @@ class _AddSubscriptionScreenState extends ConsumerState<AddSubscriptionScreen> {
                 labelText: '金額',
                 suffixText: '円',
               ),
-              keyboardType: TextInputType.number,
+              keyboardType: const TextInputType.numberWithOptions(decimal: false),
+              inputFormatters: [
+                // 半角数字と全角数字の両方を許可する正規表現
+                FilteringTextInputFormatter.allow(RegExp(r'[0-9０-９]')),
+                _CommaTextInputFormatter(),
+              ],
               validator: (value) {
                 if (value == null || value.isEmpty) return '金額を入力してください';
-                if (int.tryParse(value) == null) return '有効な数値を入力してください';
+                // 全角を半角に変換してからカンマを除去
+                final normalized = _convertFullWidthToHalfWidth(value);
+                final amountText = normalized.replaceAll(',', '');
+                final amount = int.tryParse(amountText);
+                if (amount == null) return '有効な数値を入力してください';
+                if (amount < 0) return '0以上の金額を入力してください';
                 return null;
               },
             ),
@@ -208,6 +224,81 @@ class _AddSubscriptionScreenState extends ConsumerState<AddSubscriptionScreen> {
           ],
         ),
       ),
+    );
+  }
+}
+
+/// 全角数字を半角数字に変換するユーティリティ関数
+String _convertFullWidthToHalfWidth(String input) {
+  const fullWidth = '０１２３４５６７８９';
+  const halfWidth = '0123456789';
+  
+  String result = input;
+  for (int i = 0; i < fullWidth.length; i++) {
+    result = result.replaceAll(fullWidth[i], halfWidth[i]);
+  }
+  return result;
+}
+
+/// 金額にカンマを自動挿入するフォーマッタ
+class _CommaTextInputFormatter extends TextInputFormatter {
+  @override
+  TextEditingValue formatEditUpdate(
+    TextEditingValue oldValue,
+    TextEditingValue newValue,
+  ) {
+    if (newValue.text.isEmpty) {
+      return newValue.copyWith(
+        text: '',
+        selection: const TextSelection.collapsed(offset: 0),
+        composing: TextRange.empty,
+      );
+    }
+
+    // 全角を半角に変換
+    final normalizedText = _convertFullWidthToHalfWidth(newValue.text);
+    // 数字以外（カンマなど）を除去
+    final digitsOnly = normalizedText.replaceAll(RegExp(r'[^0-9]'), '');
+    
+    if (digitsOnly.isEmpty) {
+      return newValue.copyWith(
+        text: '',
+        selection: const TextSelection.collapsed(offset: 0),
+        composing: TextRange.empty,
+      );
+    }
+
+    final intValue = int.tryParse(digitsOnly);
+    if (intValue == null) return oldValue;
+
+    // カンマ区切りの新テキスト
+    final newText = NumberFormat('#,###').format(intValue);
+
+    // カーソル位置の再計算
+    int selectionIndex = newValue.selection.end;
+    if (selectionIndex < 0) selectionIndex = 0;
+
+    int digitsBeforeCursor = 0;
+    for (int i = 0; i < selectionIndex; i++) {
+      if (i < newValue.text.length && RegExp(r'[0-9０-９]').hasMatch(newValue.text[i])) {
+        digitsBeforeCursor++;
+      }
+    }
+
+    int newSelectionIndex = 0;
+    int digitsFound = 0;
+    while (digitsFound < digitsBeforeCursor && newSelectionIndex < newText.length) {
+      if (RegExp(r'[0-9]').hasMatch(newText[newSelectionIndex])) {
+        digitsFound++;
+      }
+      newSelectionIndex++;
+    }
+
+    return TextEditingValue(
+      text: newText,
+      selection: TextSelection.collapsed(offset: newSelectionIndex),
+      // composing を empty にすることで、未確定状態を強制的に解除し、即座に反映させる
+      composing: TextRange.empty,
     );
   }
 }
