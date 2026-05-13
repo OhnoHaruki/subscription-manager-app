@@ -31,6 +31,13 @@ class PaymentMethodListScreen extends ConsumerWidget {
                     ),
                     title: Text(method.name),
                     subtitle: method.last4.isNotEmpty ? Text('末尾: ${method.last4}') : null,
+                    onTap: () {
+                      Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (context) => AddPaymentMethodScreen(paymentMethod: method),
+                        ),
+                      );
+                    },
                     trailing: IconButton(
                       icon: const Icon(Icons.delete_outline, color: Colors.red),
                       onPressed: () {

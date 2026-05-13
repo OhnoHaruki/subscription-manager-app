@@ -6,9 +6,12 @@ import '../providers/subscription_provider.dart';
 import '../providers/payment_method_provider.dart';
 import 'add_payment_method_screen.dart';
 
-/// 新規サブスクリプション登録画面
+/// サブスクリプション登録・編集画面
 class AddSubscriptionScreen extends ConsumerStatefulWidget {
-  const AddSubscriptionScreen({super.key});
+  const AddSubscriptionScreen({super.key, this.subscription});
+
+  /// 編集対象のサブスクリプション（新規登録の場合は null）
+  final Subscription? subscription;
 
   @override
   ConsumerState<AddSubscriptionScreen> createState() => _AddSubscriptionScreenState();
@@ -18,12 +21,23 @@ class _AddSubscriptionScreenState extends ConsumerState<AddSubscriptionScreen> {
   final _formKey = GlobalKey<FormState>();
   
   // 入力項目のためのコントローラー
-  final _nameController = TextEditingController();
-  final _amountController = TextEditingController();
+  late final TextEditingController _nameController;
+  late final TextEditingController _amountController;
   
-  BillingCycle _cycle = BillingCycle.monthly;
-  DateTime _nextPaymentDate = DateTime.now();
-  String _selectedPaymentMethodId = '';
+  late BillingCycle _cycle;
+  late DateTime _nextPaymentDate;
+  late String _selectedPaymentMethodId;
+
+  @override
+  void initState() {
+    super.initState();
+    // 編集モードの場合は初期値をセット、新規の場合はデフォルト値をセット
+    _nameController = TextEditingController(text: widget.subscription?.name);
+    _amountController = TextEditingController(text: widget.subscription?.amount.toString());
+    _cycle = widget.subscription?.cycle ?? BillingCycle.monthly;
+    _nextPaymentDate = widget.subscription?.nextPaymentDate ?? DateTime.now();
+    _selectedPaymentMethodId = widget.subscription?.paymentMethod ?? '';
+  }
 
   @override
   void dispose() {
@@ -36,26 +50,33 @@ class _AddSubscriptionScreenState extends ConsumerState<AddSubscriptionScreen> {
   Future<void> _save() async {
     if (!_formKey.currentState!.validate()) return;
 
-    final subscription = Subscription(
-      id: '', // リポジトリ側で自動生成
-      name: _nameController.text,
-      amount: int.parse(_amountController.text),
-      cycle: _cycle,
-      nextPaymentDate: _nextPaymentDate,
-      paymentMethod: _selectedPaymentMethodId,
-    );
+    final repository = ref.read(subscriptionRepositoryProvider);
+    
+    if (widget.subscription == null) {
+      // 新規登録
+      final subscription = Subscription(
+        id: '',
+        name: _nameController.text,
+        amount: int.parse(_amountController.text),
+        cycle: _cycle,
+        nextPaymentDate: _nextPaymentDate,
+        paymentMethod: _selectedPaymentMethodId,
+      );
+      await repository.addSubscription(subscription);
+    } else {
+      // 更新
+      final subscription = widget.subscription!.copyWith(
+        name: _nameController.text,
+        amount: int.parse(_amountController.text),
+        cycle: _cycle,
+        nextPaymentDate: _nextPaymentDate,
+        paymentMethod: _selectedPaymentMethodId,
+      );
+      await repository.updateSubscription(subscription);
+    }
 
-    try {
-      await ref.read(subscriptionRepositoryProvider).addSubscription(subscription);
-      if (mounted) {
-        Navigator.of(context).pop();
-      }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('保存に失敗しました: $e')),
-        );
-      }
+    if (mounted) {
+      Navigator.of(context).pop();
     }
   }
 
@@ -63,13 +84,23 @@ class _AddSubscriptionScreenState extends ConsumerState<AddSubscriptionScreen> {
   Widget build(BuildContext context) {
     // 支払い方法一覧を取得
     final paymentMethodsAsync = ref.watch(paymentMethodsProvider);
+    final isEditing = widget.subscription != null;
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('サブスク登録'),
+        title: Text(isEditing ? 'サブスク編集' : 'サブスク登録'),
         actions: [
           IconButton(
-            onPressed: _save,
+            onPressed: () async {
+              final messenger = ScaffoldMessenger.of(context);
+              try {
+                await _save();
+              } catch (e) {
+                messenger.showSnackBar(
+                  SnackBar(content: Text('保存に失敗しました: $e')),
+                );
+              }
+            },
             icon: const Icon(Icons.check),
           ),
         ],
