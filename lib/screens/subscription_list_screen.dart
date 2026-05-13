@@ -155,6 +155,14 @@ class _SubscriptionTile extends ConsumerWidget {
           ),
         ],
       ),
+      onTap: () {
+        // 編集画面へ遷移
+        Navigator.of(context).push(
+          MaterialPageRoute(
+            builder: (context) => AddSubscriptionScreen(subscription: subscription),
+          ),
+        );
+      },
       onLongPress: () {
         // 長押しで削除確認ダイアログ（簡易実装）
         showDialog(

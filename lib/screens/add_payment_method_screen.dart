@@ -4,9 +4,11 @@ import 'package:intl/intl.dart';
 import '../models/payment_method.dart';
 import '../providers/payment_method_provider.dart';
 
-/// 支払い方法登録画面
+/// 支払い方法登録・編集画面
 class AddPaymentMethodScreen extends ConsumerStatefulWidget {
-  const AddPaymentMethodScreen({super.key});
+  const AddPaymentMethodScreen({super.key, this.paymentMethod});
+
+  final PaymentMethod? paymentMethod;
 
   @override
   ConsumerState<AddPaymentMethodScreen> createState() => _AddPaymentMethodScreenState();
@@ -15,11 +17,20 @@ class AddPaymentMethodScreen extends ConsumerStatefulWidget {
 class _AddPaymentMethodScreenState extends ConsumerState<AddPaymentMethodScreen> {
   final _formKey = GlobalKey<FormState>();
   
-  final _nameController = TextEditingController();
-  final _last4Controller = TextEditingController();
+  late final TextEditingController _nameController;
+  late final TextEditingController _last4Controller;
   
-  PaymentMethodType _type = PaymentMethodType.creditCard;
+  late PaymentMethodType _type;
   DateTime? _expiryDate;
+
+  @override
+  void initState() {
+    super.initState();
+    _nameController = TextEditingController(text: widget.paymentMethod?.name);
+    _last4Controller = TextEditingController(text: widget.paymentMethod?.last4);
+    _type = widget.paymentMethod?.type ?? PaymentMethodType.creditCard;
+    _expiryDate = widget.paymentMethod?.expiryDate;
+  }
 
   @override
   void dispose() {
@@ -31,35 +42,53 @@ class _AddPaymentMethodScreenState extends ConsumerState<AddPaymentMethodScreen>
   Future<void> _save() async {
     if (!_formKey.currentState!.validate()) return;
 
-    final method = PaymentMethod(
-      id: '',
-      name: _nameController.text,
-      type: _type,
-      last4: _last4Controller.text,
-      expiryDate: _expiryDate,
-    );
+    final repository = ref.read(paymentMethodRepositoryProvider);
 
-    try {
-      await ref.read(paymentMethodRepositoryProvider).addPaymentMethod(method);
-      if (mounted) {
-        Navigator.pop(context);
-      }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('保存に失敗しました: $e')),
-        );
-      }
+    if (widget.paymentMethod == null) {
+      final method = PaymentMethod(
+        id: '',
+        name: _nameController.text,
+        type: _type,
+        last4: _last4Controller.text,
+        expiryDate: _expiryDate,
+      );
+      await repository.addPaymentMethod(method);
+    } else {
+      final method = widget.paymentMethod!.copyWith(
+        name: _nameController.text,
+        type: _type,
+        last4: _last4Controller.text,
+        expiryDate: _expiryDate,
+      );
+      await repository.updatePaymentMethod(method);
+    }
+
+    if (mounted) {
+      Navigator.pop(context);
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    final isEditing = widget.paymentMethod != null;
+
     return Scaffold(
       appBar: AppBar(
-        title: const Text('支払い方法登録'),
+        title: Text(isEditing ? '支払い方法編集' : '支払い方法登録'),
         actions: [
-          IconButton(onPressed: _save, icon: const Icon(Icons.check)),
+          IconButton(
+            onPressed: () async {
+              final messenger = ScaffoldMessenger.of(context);
+              try {
+                await _save();
+              } catch (e) {
+                messenger.showSnackBar(
+                  SnackBar(content: Text('保存に失敗しました: $e')),
+                );
+              }
+            },
+            icon: const Icon(Icons.check),
+          ),
         ],
       ),
       body: Form(
