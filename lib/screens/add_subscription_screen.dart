@@ -34,7 +34,13 @@ class _AddSubscriptionScreenState extends ConsumerState<AddSubscriptionScreen> {
     super.initState();
     // 編集モードの場合は初期値をセット、新規の場合はデフォルト値をセット
     _nameController = TextEditingController(text: widget.subscription?.name);
-    _amountController = TextEditingController(text: widget.subscription?.amount.toString());
+    
+    // 金額をカンマ区切りで初期化
+    final amountText = widget.subscription != null 
+        ? NumberFormat('#,###').format(widget.subscription!.amount)
+        : '';
+    _amountController = TextEditingController(text: amountText);
+    
     _cycle = widget.subscription?.cycle ?? BillingCycle.monthly;
     _nextPaymentDate = widget.subscription?.nextPaymentDate ?? DateTime.now();
     _selectedPaymentMethodId = widget.subscription?.paymentMethod ?? '';
