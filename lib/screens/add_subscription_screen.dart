@@ -58,13 +58,16 @@ class _AddSubscriptionScreenState extends ConsumerState<AddSubscriptionScreen> {
     if (!_formKey.currentState!.validate()) return;
 
     final repository = ref.read(subscriptionRepositoryProvider);
+    // カンマを除去して数値に変換
+    final amountText = _amountController.text.replaceAll(',', '');
+    final amount = int.parse(amountText);
     
     if (widget.subscription == null) {
       // 新規登録
       final subscription = Subscription(
         id: '',
         name: _nameController.text,
-        amount: int.parse(_amountController.text),
+        amount: amount,
         cycle: _cycle,
         nextPaymentDate: _nextPaymentDate,
         paymentMethod: _selectedPaymentMethodId,
@@ -74,7 +77,7 @@ class _AddSubscriptionScreenState extends ConsumerState<AddSubscriptionScreen> {
       // 更新
       final subscription = widget.subscription!.copyWith(
         name: _nameController.text,
-        amount: int.parse(_amountController.text),
+        amount: amount,
         cycle: _cycle,
         nextPaymentDate: _nextPaymentDate,
         paymentMethod: _selectedPaymentMethodId,
@@ -143,15 +146,12 @@ class _AddSubscriptionScreenState extends ConsumerState<AddSubscriptionScreen> {
               ),
               keyboardType: const TextInputType.numberWithOptions(decimal: false),
               inputFormatters: [
-                // 半角数字と全角数字の両方を許可する正規表現
-                FilteringTextInputFormatter.allow(RegExp(r'[0-9０-９]')),
+                FilteringTextInputFormatter.digitsOnly,
                 _CommaTextInputFormatter(),
               ],
               validator: (value) {
                 if (value == null || value.isEmpty) return '金額を入力してください';
-                // 全角を半角に変換してからカンマを除去
-                final normalized = _convertFullWidthToHalfWidth(value);
-                final amountText = normalized.replaceAll(',', '');
+                final amountText = value.replaceAll(',', '');
                 final amount = int.tryParse(amountText);
                 if (amount == null) return '有効な数値を入力してください';
                 if (amount < 0) return '0以上の金額を入力してください';
@@ -234,18 +234,6 @@ class _AddSubscriptionScreenState extends ConsumerState<AddSubscriptionScreen> {
   }
 }
 
-/// 全角数字を半角数字に変換するユーティリティ関数
-String _convertFullWidthToHalfWidth(String input) {
-  const fullWidth = '０１２３４５６７８９';
-  const halfWidth = '0123456789';
-  
-  String result = input;
-  for (int i = 0; i < fullWidth.length; i++) {
-    result = result.replaceAll(fullWidth[i], halfWidth[i]);
-  }
-  return result;
-}
-
 /// 金額にカンマを自動挿入するフォーマッタ
 class _CommaTextInputFormatter extends TextInputFormatter {
   @override
@@ -257,24 +245,12 @@ class _CommaTextInputFormatter extends TextInputFormatter {
       return newValue.copyWith(
         text: '',
         selection: const TextSelection.collapsed(offset: 0),
-        composing: TextRange.empty,
       );
     }
 
-    // 全角を半角に変換
-    final normalizedText = _convertFullWidthToHalfWidth(newValue.text);
-    // 数字以外（カンマなど）を除去
-    final digitsOnly = normalizedText.replaceAll(RegExp(r'[^0-9]'), '');
-    
-    if (digitsOnly.isEmpty) {
-      return newValue.copyWith(
-        text: '',
-        selection: const TextSelection.collapsed(offset: 0),
-        composing: TextRange.empty,
-      );
-    }
-
-    final intValue = int.tryParse(digitsOnly);
+    // 数字以外を除去
+    final cleanText = newValue.text.replaceAll(',', '');
+    final intValue = int.tryParse(cleanText);
     if (intValue == null) return oldValue;
 
     // カンマ区切りの新テキスト
@@ -286,7 +262,7 @@ class _CommaTextInputFormatter extends TextInputFormatter {
 
     int digitsBeforeCursor = 0;
     for (int i = 0; i < selectionIndex; i++) {
-      if (i < newValue.text.length && RegExp(r'[0-9０-９]').hasMatch(newValue.text[i])) {
+      if (i < newValue.text.length && RegExp(r'[0-9]').hasMatch(newValue.text[i])) {
         digitsBeforeCursor++;
       }
     }
@@ -303,8 +279,6 @@ class _CommaTextInputFormatter extends TextInputFormatter {
     return TextEditingValue(
       text: newText,
       selection: TextSelection.collapsed(offset: newSelectionIndex),
-      // composing を empty にすることで、未確定状態を強制的に解除し、即座に反映させる
-      composing: TextRange.empty,
     );
   }
 }
