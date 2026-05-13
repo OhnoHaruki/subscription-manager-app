@@ -102,8 +102,14 @@ class _AddPaymentMethodScreenState extends ConsumerState<AddPaymentMethodScreen>
               decoration: const InputDecoration(
                 labelText: '支払い方法の名称',
                 hintText: '例: メインカード, 楽天銀行など',
+                counterText: '',
               ),
-              validator: (value) => (value == null || value.isEmpty) ? '名前を入力してください' : null,
+              maxLength: 50,
+              validator: (value) {
+                if (value == null || value.isEmpty) return '名前を入力してください';
+                if (value.length > 50) return '50文字以内で入力してください';
+                return null;
+              },
             ),
             const SizedBox(height: 16),
             
@@ -130,6 +136,13 @@ class _AddPaymentMethodScreenState extends ConsumerState<AddPaymentMethodScreen>
               ),
               keyboardType: TextInputType.number,
               maxLength: 4,
+              validator: (value) {
+                if (value != null && value.isNotEmpty) {
+                  if (value.length != 4) return '4桁で入力してください';
+                  if (int.tryParse(value) == null) return '数値で入力してください';
+                }
+                return null;
+              },
             ),
             
             // 有効期限（カードの場合のみ）

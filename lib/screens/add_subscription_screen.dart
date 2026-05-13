@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import '../models/subscription.dart';
@@ -33,7 +34,13 @@ class _AddSubscriptionScreenState extends ConsumerState<AddSubscriptionScreen> {
     super.initState();
     // 編集モードの場合は初期値をセット、新規の場合はデフォルト値をセット
     _nameController = TextEditingController(text: widget.subscription?.name);
-    _amountController = TextEditingController(text: widget.subscription?.amount.toString());
+    
+    // 金額をカンマ区切りで初期化
+    final amountText = widget.subscription != null 
+        ? NumberFormat('#,###').format(widget.subscription!.amount)
+        : '';
+    _amountController = TextEditingController(text: amountText);
+    
     _cycle = widget.subscription?.cycle ?? BillingCycle.monthly;
     _nextPaymentDate = widget.subscription?.nextPaymentDate ?? DateTime.now();
     _selectedPaymentMethodId = widget.subscription?.paymentMethod ?? '';
@@ -51,13 +58,16 @@ class _AddSubscriptionScreenState extends ConsumerState<AddSubscriptionScreen> {
     if (!_formKey.currentState!.validate()) return;
 
     final repository = ref.read(subscriptionRepositoryProvider);
+    // カンマを除去して数値に変換
+    final amountText = _amountController.text.replaceAll(',', '');
+    final amount = int.parse(amountText);
     
     if (widget.subscription == null) {
       // 新規登録
       final subscription = Subscription(
         id: '',
         name: _nameController.text,
-        amount: int.parse(_amountController.text),
+        amount: amount,
         cycle: _cycle,
         nextPaymentDate: _nextPaymentDate,
         paymentMethod: _selectedPaymentMethodId,
@@ -67,7 +77,7 @@ class _AddSubscriptionScreenState extends ConsumerState<AddSubscriptionScreen> {
       // 更新
       final subscription = widget.subscription!.copyWith(
         name: _nameController.text,
-        amount: int.parse(_amountController.text),
+        amount: amount,
         cycle: _cycle,
         nextPaymentDate: _nextPaymentDate,
         paymentMethod: _selectedPaymentMethodId,
@@ -116,9 +126,14 @@ class _AddSubscriptionScreenState extends ConsumerState<AddSubscriptionScreen> {
               decoration: const InputDecoration(
                 labelText: 'サービス名',
                 hintText: '例: Netflix, Spotifyなど',
+                counterText: '', // 文字数カウンターを表示しない
               ),
-              validator: (value) =>
-                  (value == null || value.isEmpty) ? 'サービス名を入力してください' : null,
+              maxLength: 50,
+              validator: (value) {
+                if (value == null || value.isEmpty) return 'サービス名を入力してください';
+                if (value.length > 50) return '50文字以内で入力してください';
+                return null;
+              },
             ),
             const SizedBox(height: 16),
             
@@ -129,10 +144,20 @@ class _AddSubscriptionScreenState extends ConsumerState<AddSubscriptionScreen> {
                 labelText: '金額',
                 suffixText: '円',
               ),
-              keyboardType: TextInputType.number,
+              keyboardType: const TextInputType.numberWithOptions(decimal: false),
+              inputFormatters: [
+                FilteringTextInputFormatter.digitsOnly,
+                _CommaTextInputFormatter(),
+              ],
               validator: (value) {
                 if (value == null || value.isEmpty) return '金額を入力してください';
-                if (int.tryParse(value) == null) return '有効な数値を入力してください';
+                // 全角が含まれていないかチェック
+                if (RegExp(r'[０-９]').hasMatch(value)) return '半角数字で入力してください';
+                
+                final amountText = value.replaceAll(',', '');
+                final amount = int.tryParse(amountText);
+                if (amount == null) return '有効な数値を入力してください';
+                if (amount < 0) return '0以上の金額を入力してください';
                 return null;
               },
             ),
@@ -208,6 +233,55 @@ class _AddSubscriptionScreenState extends ConsumerState<AddSubscriptionScreen> {
           ],
         ),
       ),
+    );
+  }
+}
+
+/// 金額にカンマを自動挿入するフォーマッタ
+class _CommaTextInputFormatter extends TextInputFormatter {
+  @override
+  TextEditingValue formatEditUpdate(
+    TextEditingValue oldValue,
+    TextEditingValue newValue,
+  ) {
+    if (newValue.text.isEmpty) {
+      return newValue.copyWith(
+        text: '',
+        selection: const TextSelection.collapsed(offset: 0),
+      );
+    }
+
+    // 数字以外を除去
+    final cleanText = newValue.text.replaceAll(',', '');
+    final intValue = int.tryParse(cleanText);
+    if (intValue == null) return oldValue;
+
+    // カンマ区切りの新テキスト
+    final newText = NumberFormat('#,###').format(intValue);
+
+    // カーソル位置の再計算
+    int selectionIndex = newValue.selection.end;
+    if (selectionIndex < 0) selectionIndex = 0;
+
+    int digitsBeforeCursor = 0;
+    for (int i = 0; i < selectionIndex; i++) {
+      if (i < newValue.text.length && RegExp(r'[0-9]').hasMatch(newValue.text[i])) {
+        digitsBeforeCursor++;
+      }
+    }
+
+    int newSelectionIndex = 0;
+    int digitsFound = 0;
+    while (digitsFound < digitsBeforeCursor && newSelectionIndex < newText.length) {
+      if (RegExp(r'[0-9]').hasMatch(newText[newSelectionIndex])) {
+        digitsFound++;
+      }
+      newSelectionIndex++;
+    }
+
+    return TextEditingValue(
+      text: newText,
+      selection: TextSelection.collapsed(offset: newSelectionIndex),
     );
   }
 }
