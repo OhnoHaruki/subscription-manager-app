@@ -1,50 +1,60 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import '../models/payment_method.dart';
 
 /// 支払い方法（クレジットカード、銀行口座など）のデータを管理するリポジトリクラス
 class PaymentMethodRepository {
-  PaymentMethodRepository(this._firestore);
+  PaymentMethodRepository(this._client);
 
-  final FirebaseFirestore _firestore;
+  final SupabaseClient _client;
 
-  /// Firestoreのコレクション参照
-  CollectionReference<Map<String, dynamic>> get _collection =>
-      _firestore.collection('payment_methods');
+  /// Supabaseのテーブル参照
+  SupabaseQueryBuilder get _table => _client.from('payment_methods');
 
   /// 支払い方法一覧をリアルタイムで取得する
   Stream<List<PaymentMethod>> watchPaymentMethods() {
-    return _collection.snapshots().map((snapshot) {
-      return snapshot.docs.map((doc) {
-        final data = doc.data();
-        data['id'] = doc.id;
+    return _table.stream(primaryKey: ['id']).map((maps) {
+      return maps.map((map) {
+        final data = Map<String, dynamic>.from(map);
+        data['expiryDate'] = data['expiry_date'];
+        data.remove('expiry_date');
         return PaymentMethod.fromJson(data);
       }).toList();
     });
   }
 
   /// 新規支払い方法を追加する
-  Future<String> addPaymentMethod(PaymentMethod method) async {
+  Future<void> addPaymentMethod(PaymentMethod method) async {
     final json = method.toJson();
-    json.remove('id');
-    
-    final docRef = await _collection.add(json);
-    return docRef.id;
+
+    final Map<String, dynamic> supabaseJson = {
+      'user_id': '00000000-0000-0000-0000-000000000000', // テスト用ダミーID
+      'name': json['name'],
+      'type': json['type'],
+      'last4': json['last4'],
+      'expiry_date': json['expiryDate'],
+    };
+
+    await _table.insert(supabaseJson);
   }
+
 
   /// 支払い方法情報を更新する
   Future<void> updatePaymentMethod(PaymentMethod method) async {
     final json = method.toJson();
-    final id = json.remove('id');
-    
-    if (id == null || (id as String).isEmpty) {
-      throw Exception('Update failed: PaymentMethod ID is empty');
-    }
+    final id = json['id'];
 
-    await _collection.doc(id).update(json);
+    final Map<String, dynamic> supabaseJson = {
+      'name': json['name'],
+      'type': json['type'],
+      'last4': json['last4'],
+      'expiry_date': json['expiryDate'],
+    };
+
+    await _table.update(supabaseJson).eq('id', id);
   }
 
   /// 支払い方法を削除する
   Future<void> deletePaymentMethod(String id) async {
-    await _collection.doc(id).delete();
+    await _table.delete().eq('id', id);
   }
 }

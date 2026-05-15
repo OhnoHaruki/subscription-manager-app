@@ -5,7 +5,7 @@ import 'subscription_provider.dart';
 
 /// PaymentMethodRepositoryのインスタンスを提供するProvider
 final paymentMethodRepositoryProvider = Provider<PaymentMethodRepository>((ref) {
-  return PaymentMethodRepository(ref.watch(firestoreProvider));
+  return PaymentMethodRepository(ref.watch(supabaseProvider));
 });
 
 /// 支払い方法一覧をリアルタイムで監視するProvider

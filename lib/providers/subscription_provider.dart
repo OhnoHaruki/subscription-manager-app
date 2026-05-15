@@ -1,16 +1,16 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import '../models/subscription.dart';
 import '../repositories/subscription_repository.dart';
 
-/// Firestoreのインスタンスを提供するProvider
-final firestoreProvider = Provider<FirebaseFirestore>((ref) {
-  return FirebaseFirestore.instance;
+/// Supabaseクライアントを提供するProvider
+final supabaseProvider = Provider<SupabaseClient>((ref) {
+  return Supabase.instance.client;
 });
 
 /// SubscriptionRepositoryのインスタンスを提供するProvider
 final subscriptionRepositoryProvider = Provider<SubscriptionRepository>((ref) {
-  return SubscriptionRepository(ref.watch(firestoreProvider));
+  return SubscriptionRepository(ref.watch(supabaseProvider));
 });
 
 /// サブスクリプション一覧をリアルタイムで監視するProvider
