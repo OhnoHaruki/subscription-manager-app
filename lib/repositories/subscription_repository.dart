@@ -1,55 +1,71 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import '../models/subscription.dart';
 
 /// サブスクリプションデータの取得・保存を管理するリポジトリクラス
 class SubscriptionRepository {
-  SubscriptionRepository(this._firestore);
+  SubscriptionRepository(this._client);
 
-  final FirebaseFirestore _firestore;
+  final SupabaseClient _client;
 
-  /// Firestoreのコレクション参照
-  /// ※ 実際のアカウント連携時は `.collection('users').doc(userId).collection('subscriptions')` 
-  /// のようにユーザーごとにサブコレクションを分けるのが一般的ですが、
-  /// まずは簡易的にトップレベルの `subscriptions` コレクションを使用します。
-  CollectionReference<Map<String, dynamic>> get _collection =>
-      _firestore.collection('subscriptions');
+  /// Supabaseのテーブル参照
+  SupabaseQueryBuilder get _table => _client.from('subscriptions');
 
   /// サブスクリプション一覧をリアルタイムで取得する
   Stream<List<Subscription>> watchSubscriptions() {
-    return _collection.snapshots().map((snapshot) {
-      return snapshot.docs.map((doc) {
-        // ドキュメントIDをモデルのidフィールドに反映させてパース
-        final data = doc.data();
-        data['id'] = doc.id;
+    return _table.stream(primaryKey: ['id']).map((maps) {
+      return maps.map((map) {
+        final data = Map<String, dynamic>.from(map);
+        data['id'] = map['id'];
+        data['nextPaymentDate'] = data['next_payment_date'];
+        data.remove('next_payment_date');
         return Subscription.fromJson(data);
       }).toList();
     });
   }
 
   /// 新規サブスクリプションを追加する
-  Future<String> addSubscription(Subscription subscription) async {
-    // 登録時はIDを自動生成させるため、idフィールドを除いたMapを送信
+  Future<void> addSubscription(Subscription subscription) async {
     final json = subscription.toJson();
-    json.remove('id');
     
-    final docRef = await _collection.add(json);
-    return docRef.id;
+    // Supabaseのテーブル定義に合わせたJSONを構築
+    final Map<String, dynamic> supabaseJson = {
+      'user_id': '00000000-0000-0000-0000-000000000000', // テスト用ダミーID
+      'name': json['name'],
+      'amount': json['amount'],
+      'cycle': json['cycle'],
+      'next_payment_date': json['nextPaymentDate'],
+      'payment_method_id': json['paymentMethod']?.isEmpty ?? true ? null : json['paymentMethod'],
+    };
+
+    try {
+      await _table.insert(supabaseJson);
+    } catch (e) {
+      if (e is PostgrestException) {
+        print('Supabase Error: ${e.message}, Detail: ${e.details}');
+      }
+      rethrow;
+    }
   }
 
   /// サブスクリプション情報を更新する
   Future<void> updateSubscription(Subscription subscription) async {
     final json = subscription.toJson();
-    final id = json.remove('id');
+    final id = json['id'];
     
-    if (id == null || (id as String).isEmpty) {
-      throw Exception('Update failed: Subscription ID is empty');
-    }
+    // Supabaseのテーブル定義に合わせたJSONを構築
+    final Map<String, dynamic> supabaseJson = {
+      'name': json['name'],
+      'amount': json['amount'],
+      'cycle': json['cycle'],
+      'next_payment_date': json['nextPaymentDate'],
+      'payment_method_id': json['paymentMethod']?.isEmpty ?? true ? null : json['paymentMethod'],
+    };
 
-    await _collection.doc(id).update(json);
+    await _table.update(supabaseJson).eq('id', id);
   }
 
   /// サブスクリプションを削除する
   Future<void> deleteSubscription(String id) async {
-    await _collection.doc(id).delete();
+    await _table.delete().eq('id', id);
   }
 }

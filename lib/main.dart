@@ -1,14 +1,17 @@
-import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'firebase_options.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'screens/subscription_list_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await Firebase.initializeApp(
-    options: DefaultFirebaseOptions.currentPlatform,
+
+  // Supabaseの初期化
+  await Supabase.initialize(
+    url: 'https://cnzemczppkrgwvnoygmk.supabase.co',
+    anonKey: 'sb_publishable_bRM5u1ymGPyGGLhZm9G_6w_IjVoSVti',
   );
+
   runApp(const ProviderScope(child: MyApp()));
 }
 
