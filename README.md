@@ -52,9 +52,9 @@
 | 分類 | 使用技術 |
 | --- | --- |
 | アプリ開発 | Flutter |
-| 認証 | Firebase Authentication |
-| データベース | Cloud Firestore |
-| バックエンド | Firebase |
+| 認証 | Supabase Auth |
+| データベース | Supabase Database (PostgreSQL) |
+| バックエンド | Supabase |
 
 ## 想定しているユーザー
 
@@ -99,7 +99,7 @@ MVPでは、次のような画面を想定しています。
 | ツール | 用途 | インストール方法 |
 | --- | --- | --- |
 | [asdf](https://asdf-vm.com/) | Flutter バージョン管理 | 公式ドキュメント参照 |
-| [bun](https://bun.sh/) | Firebase CLI のインストール | `curl -fsSL https://bun.sh/install \| bash` |
+| [Supabase CLI](https://supabase.com/docs/guides/cli) | バックエンド管理 | `brew install supabase/tap/supabase` (macOSの場合) |
 
 ### 手順
 
@@ -108,7 +108,6 @@ MVPでは、次のような画面を想定しています。
 ```bash
 # asdf プラグインを追加（.tool-versions で flutter / nodejs 両方を管理）
 asdf plugin add flutter
-asdf plugin add nodejs
 
 # .tool-versions のバージョンを一括インストール
 asdf install
@@ -117,26 +116,35 @@ asdf install
 flutter pub get
 ```
 
-#### 2. Firebase CLI・FlutterFire CLI のセットアップ
+#### 2. Supabase のセットアップ
 
-```bash
-# Firebase CLI のインストール
-bun install -g firebase-tools
+[Supabase Console](https://supabase.com/) でプロジェクトを作成し、URLとAnonキーを取得します。
 
-# FlutterFire CLI のインストール
-dart pub global activate flutterfire_cli
+`lib/main.dart` の `Supabase.initialize` に取得した値を設定してください。
 
-# Firebase にログイン
-firebase login
+```dart
+// lib/main.dart
+await Supabase.initialize(
+  url: 'YOUR_SUPABASE_URL',
+  anonKey: 'YOUR_SUPABASE_ANON_KEY',
+);
 ```
 
-#### 3. Firebase プロジェクトの接続
+#### 3. データベース・RLSの設定
 
-[Firebase Console](https://console.firebase.google.com/) でプロジェクトを作成し、Authentication と Firestore を有効化した後:
+プロジェクトのルートディレクトリで以下のコマンドを実行し、データベースのマイグレーションを適用します。
 
 ```bash
-flutterfire configure
+# ローカル開発の場合（Dockerが必要）
+supabase start
+
+# リモートプロジェクトに適用する場合
+# supabase login
+# supabase link --project-ref <project-id>
+# supabase db push
 ```
+
+※ 手動で設定する場合は `supabase/migrations` 内のSQLファイルを順に適用してください。
 
 #### 4. アプリの起動
 

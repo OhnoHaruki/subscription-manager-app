@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'screens/subscription_list_screen.dart';
+import 'screens/login_screen.dart';
+import 'providers/auth_provider.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -26,7 +28,32 @@ class MyApp extends StatelessWidget {
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
         useMaterial3: true,
       ),
-      home: const SubscriptionListScreen(),
+      home: const RootPage(),
+    );
+  }
+}
+
+class RootPage extends ConsumerWidget {
+  const RootPage({super.key});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final authState = ref.watch(authStateProvider);
+
+    return authState.when(
+      data: (state) {
+        if (state.session != null) {
+          return const SubscriptionListScreen();
+        } else {
+          return const LoginScreen();
+        }
+      },
+      loading: () => const Scaffold(
+        body: Center(child: CircularProgressIndicator()),
+      ),
+      error: (error, stack) => Scaffold(
+        body: Center(child: Text('エラーが発生しました: $error')),
+      ),
     );
   }
 }
