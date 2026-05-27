@@ -18,6 +18,51 @@ final subscriptionsProvider = StreamProvider<List<Subscription>>((ref) {
   return ref.watch(subscriptionRepositoryProvider).watchSubscriptions();
 });
 
+/// 検索キーワードを管理するNotifier
+class SubscriptionSearchQuery extends Notifier<String> {
+  @override
+  String build() => '';
+  void set(String query) => state = query;
+}
+
+final subscriptionSearchQueryProvider = NotifierProvider<SubscriptionSearchQuery, String>(SubscriptionSearchQuery.new);
+
+/// 選択されたフィルタ用タグIDを管理するNotifier
+class SelectedFilterTagIds extends Notifier<List<String>> {
+  @override
+  List<String> build() => [];
+  void toggle(String tagId) {
+    if (state.contains(tagId)) {
+      state = state.where((id) => id != tagId).toList();
+    } else {
+      state = [...state, tagId];
+    }
+  }
+  void clear() => state = [];
+}
+
+final selectedFilterTagIdsProvider = NotifierProvider<SelectedFilterTagIds, List<String>>(SelectedFilterTagIds.new);
+
+/// フィルタリング適用後のサブスクリプション一覧を提供するProvider
+final filteredSubscriptionsProvider = Provider<AsyncValue<List<Subscription>>>((ref) {
+  final subscriptionsAsync = ref.watch(subscriptionsProvider);
+  final searchQuery = ref.watch(subscriptionSearchQueryProvider).toLowerCase();
+  final selectedTagIds = ref.watch(selectedFilterTagIdsProvider);
+
+  return subscriptionsAsync.whenData((subscriptions) {
+    return subscriptions.where((sub) {
+      // 名前による検索
+      final matchesSearch = sub.name.toLowerCase().contains(searchQuery);
+      
+      // タグによる絞り込み（選択されているタグがいずれか1つでも含まれていればマッチ、未選択なら全てマッチ）
+      final matchesTags = selectedTagIds.isEmpty || 
+          selectedTagIds.any((tagId) => sub.tags.contains(tagId));
+
+      return matchesSearch && matchesTags;
+    }).toList();
+  });
+});
+
 /// 月額合計金額を計算するProvider
 final monthlyTotalAmountProvider = Provider<double>((ref) {
   final subscriptions = ref.watch(subscriptionsProvider).value ?? [];

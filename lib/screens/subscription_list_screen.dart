@@ -12,21 +12,65 @@ import 'profile_screen.dart';
 import '../providers/tag_provider.dart';
 
 /// サブスクリプション一覧を表示するホーム画面
-class SubscriptionListScreen extends ConsumerWidget {
+class SubscriptionListScreen extends ConsumerStatefulWidget {
   const SubscriptionListScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    // サブスクリプション一覧を監視
-    final subscriptionsAsync = ref.watch(subscriptionsProvider);
+  ConsumerState<SubscriptionListScreen> createState() => _SubscriptionListScreenState();
+}
+
+class _SubscriptionListScreenState extends ConsumerState<SubscriptionListScreen> {
+  bool _isSearching = false;
+  final _searchController = TextEditingController();
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    // フィルタリング後の一覧を監視
+    final subscriptionsAsync = ref.watch(filteredSubscriptionsProvider);
     // 月額合計金額を取得
     final totalAmount = ref.watch(monthlyTotalAmountProvider);
+    // タグ一覧を取得
+    final tagsAsync = ref.watch(tagsProvider);
+    final selectedTagIds = ref.watch(selectedFilterTagIdsProvider);
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('サブスク管理'),
+        title: _isSearching
+            ? TextField(
+                controller: _searchController,
+                autofocus: true,
+                decoration: const InputDecoration(
+                  hintText: 'サービス名で検索...',
+                  border: InputBorder.none,
+                ),
+                onChanged: (value) {
+                  ref.read(subscriptionSearchQueryProvider.notifier).set(value);
+                },
+              )
+            : const Text('サブスク管理'),
         backgroundColor: Theme.of(context).colorScheme.inversePrimary,
         actions: [
+          IconButton(
+            icon: Icon(_isSearching ? Icons.close : Icons.search),
+            onPressed: () {
+              setState(() {
+                if (_isSearching) {
+                  _isSearching = false;
+                  _searchController.clear();
+                  ref.read(subscriptionSearchQueryProvider.notifier).set('');
+                } else {
+                  _isSearching = true;
+                }
+              });
+            },
+            tooltip: _isSearching ? '検索を閉じる' : '検索',
+          ),
           IconButton(
             icon: const Icon(Icons.person_outline),
             onPressed: () {
@@ -95,19 +139,58 @@ class SubscriptionListScreen extends ConsumerWidget {
         children: [
           // 合計金額表示エリア
           _TotalAmountCard(amount: totalAmount),
+
+          // タグフィルタエリア
+          tagsAsync.when(
+            data: (tags) => tags.isEmpty
+                ? const SizedBox.shrink()
+                : SizedBox(
+                    height: 50,
+                    child: ListView.builder(
+                      scrollDirection: Axis.horizontal,
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      itemCount: tags.length,
+                      itemBuilder: (context, index) {
+                        final tag = tags[index];
+                        final isSelected = selectedTagIds.contains(tag.id);
+                        return Padding(
+                          padding: const EdgeInsets.only(right: 8),
+                          child: FilterChip(
+                            label: Text(tag.name, style: const TextStyle(fontSize: 12)),
+                            selected: isSelected,
+                            onSelected: (selected) {
+                              ref.read(selectedFilterTagIdsProvider.notifier).toggle(tag.id);
+                            },
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+            loading: () => const SizedBox(height: 50),
+            error: (error, stack) => const SizedBox.shrink(),
+          ),
           
           // 一覧表示エリア
           Expanded(
             child: subscriptionsAsync.when(
-              data: (subscriptions) => subscriptions.isEmpty
-                  ? const Center(child: Text('サブスクリプションが登録されていません'))
-                  : ListView.builder(
-                      itemCount: subscriptions.length,
-                      itemBuilder: (context, index) {
-                        final subscription = subscriptions[index];
-                        return _SubscriptionTile(subscription: subscription);
-                      },
+              data: (subscriptions) {
+                if (subscriptions.isEmpty) {
+                  return Center(
+                    child: Text(
+                      _isSearching || selectedTagIds.isNotEmpty
+                          ? '条件に一致するサブスクリプションが見つかりません'
+                          : 'サブスクリプションが登録されていません',
                     ),
+                  );
+                }
+                return ListView.builder(
+                  itemCount: subscriptions.length,
+                  itemBuilder: (context, index) {
+                    final subscription = subscriptions[index];
+                    return _SubscriptionTile(subscription: subscription);
+                  },
+                );
+              },
               loading: () => const Center(child: CircularProgressIndicator()),
               error: (error, stack) => Center(child: Text('エラーが発生しました: $error')),
             ),
