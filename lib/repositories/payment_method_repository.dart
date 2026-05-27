@@ -12,22 +12,31 @@ class PaymentMethodRepository {
 
   /// 支払い方法一覧をリアルタイムで取得する
   Stream<List<PaymentMethod>> watchPaymentMethods() {
-    return _table.stream(primaryKey: ['id']).map((maps) {
-      return maps.map((map) {
-        final data = Map<String, dynamic>.from(map);
-        data['expiryDate'] = data['expiry_date'];
-        data.remove('expiry_date');
-        return PaymentMethod.fromJson(data);
-      }).toList();
-    });
+    final userId = _client.auth.currentUser?.id;
+    if (userId == null) return Stream.value([]);
+
+    return _table
+        .stream(primaryKey: ['id'])
+        .eq('user_id', userId)
+        .map((maps) {
+          return maps.map((map) {
+            final data = Map<String, dynamic>.from(map);
+            data['expiryDate'] = data['expiry_date'];
+            data.remove('expiry_date');
+            return PaymentMethod.fromJson(data);
+          }).toList();
+        });
   }
 
   /// 新規支払い方法を追加する
   Future<void> addPaymentMethod(PaymentMethod method) async {
+    final user = _client.auth.currentUser;
+    if (user == null) throw Exception('ログインが必要です');
+
     final json = method.toJson();
 
     final Map<String, dynamic> supabaseJson = {
-      'user_id': '00000000-0000-0000-0000-000000000000', // テスト用ダミーID
+      'user_id': user.id,
       'name': json['name'],
       'type': json['type'],
       'last4': json['last4'],

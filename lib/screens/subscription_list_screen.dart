@@ -4,6 +4,7 @@ import 'package:intl/intl.dart';
 import '../models/subscription.dart';
 import '../providers/subscription_provider.dart';
 import '../providers/payment_method_provider.dart';
+import '../providers/auth_provider.dart';
 import 'add_subscription_screen.dart';
 import 'payment_method_list_screen.dart';
 
@@ -22,6 +23,16 @@ class SubscriptionListScreen extends ConsumerWidget {
       appBar: AppBar(
         title: const Text('サブスク管理'),
         backgroundColor: Theme.of(context).colorScheme.inversePrimary,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.logout),
+            onPressed: () async {
+              // ログアウト処理
+              await ref.read(authRepositoryProvider).signOut();
+            },
+            tooltip: 'ログアウト',
+          ),
+        ],
       ),
       drawer: Drawer(
         child: ListView(
