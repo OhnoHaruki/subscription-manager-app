@@ -4,7 +4,6 @@ import 'package:intl/intl.dart';
 import '../models/subscription.dart';
 import '../providers/subscription_provider.dart';
 import '../providers/payment_method_provider.dart';
-import '../providers/auth_provider.dart';
 import 'add_subscription_screen.dart';
 import 'payment_method_list_screen.dart';
 import 'tag_list_screen.dart';
@@ -208,7 +207,7 @@ class _SubscriptionTile extends ConsumerWidget {
                   return Container(
                     padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                     decoration: BoxDecoration(
-                      color: Colors.deepPurple.withOpacity(0.1),
+                      color: Colors.deepPurple.withAlpha(25),
                       borderRadius: BorderRadius.circular(4),
                     ),
                     child: Text(

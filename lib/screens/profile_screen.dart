@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../providers/auth_provider.dart';
 import '../providers/profile_provider.dart';
+import '../providers/theme_provider.dart';
 
 class ProfileScreen extends ConsumerStatefulWidget {
   const ProfileScreen({super.key});
@@ -23,6 +24,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
 
   Future<void> _updateProfile(String id) async {
     setState(() => _isLoading = true);
+    final messenger = ScaffoldMessenger.of(context);
     try {
       final repository = ref.read(profileRepositoryProvider);
       final profile = ref.read(profileProvider).value;
@@ -33,14 +35,14 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
         ref.invalidate(profileProvider);
         if (mounted) {
           setState(() => _isEditing = false);
-          ScaffoldMessenger.of(context).showSnackBar(
+          messenger.showSnackBar(
             const SnackBar(content: Text('プロフィールを更新しました')),
           );
         }
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
+        messenger.showSnackBar(
           SnackBar(content: Text('更新に失敗しました: $e')),
         );
       }
@@ -55,6 +57,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   Widget build(BuildContext context) {
     final user = ref.watch(currentUserProvider);
     final profileAsync = ref.watch(profileProvider);
+    final themeMode = ref.watch(themeProvider);
 
     return Scaffold(
       appBar: AppBar(
@@ -86,6 +89,39 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                 title: const Text('メールアドレス'),
                 subtitle: Text(user?.email ?? '不明'),
                 leading: const Icon(Icons.email),
+              ),
+              const Divider(),
+
+              // テーマ設定
+              ListTile(
+                leading: const Icon(Icons.palette),
+                title: const Text('テーマ設定'),
+                subtitle: Padding(
+                  padding: const EdgeInsets.only(top: 8),
+                  child: SegmentedButton<ThemeMode>(
+                    segments: const [
+                      ButtonSegment(
+                        value: ThemeMode.system,
+                        label: Text('自動'),
+                        icon: Icon(Icons.brightness_auto),
+                      ),
+                      ButtonSegment(
+                        value: ThemeMode.light,
+                        label: Text('ライト'),
+                        icon: Icon(Icons.light_mode),
+                      ),
+                      ButtonSegment(
+                        value: ThemeMode.dark,
+                        label: Text('ダーク'),
+                        icon: Icon(Icons.dark_mode),
+                      ),
+                    ],
+                    selected: {themeMode},
+                    onSelectionChanged: (newSelection) {
+                      ref.read(themeProvider.notifier).setThemeMode(newSelection.first);
+                    },
+                  ),
+                ),
               ),
               const Divider(),
 
@@ -145,6 +181,8 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                 padding: const EdgeInsets.symmetric(horizontal: 16),
                 child: OutlinedButton.icon(
                   onPressed: () async {
+                    final navigator = Navigator.of(context);
+                    
                     final confirm = await showDialog<bool>(
                       context: context,
                       builder: (context) => AlertDialog(
@@ -164,7 +202,6 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                     );
 
                     if (confirm == true) {
-                      final navigator = Navigator.of(context);
                       await ref.read(authRepositoryProvider).signOut();
                       if (mounted) {
                         navigator.popUntil((route) => route.isFirst);

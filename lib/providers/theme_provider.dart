@@ -3,12 +3,14 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 /// テーマ設定を管理するNotifier
-class ThemeNotifier extends StateNotifier<ThemeMode> {
-  ThemeNotifier() : super(ThemeMode.system) {
-    _loadTheme();
-  }
-
+class ThemeNotifier extends Notifier<ThemeMode> {
   static const _key = 'theme_mode';
+
+  @override
+  ThemeMode build() {
+    _loadTheme();
+    return ThemeMode.system;
+  }
 
   Future<void> _loadTheme() async {
     final prefs = await SharedPreferences.getInstance();
@@ -31,6 +33,4 @@ class ThemeNotifier extends StateNotifier<ThemeMode> {
 }
 
 /// ThemeNotifierを提供するProvider
-final themeProvider = StateNotifierProvider<ThemeNotifier, ThemeMode>((ref) {
-  return ThemeNotifier();
-});
+final themeProvider = NotifierProvider<ThemeNotifier, ThemeMode>(ThemeNotifier.new);
