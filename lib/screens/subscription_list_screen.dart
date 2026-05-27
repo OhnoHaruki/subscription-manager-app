@@ -8,6 +8,7 @@ import '../providers/auth_provider.dart';
 import 'add_subscription_screen.dart';
 import 'payment_method_list_screen.dart';
 import 'tag_list_screen.dart';
+import 'statistics_screen.dart';
 import '../providers/tag_provider.dart';
 
 /// サブスクリプション一覧を表示するホーム画面
@@ -53,6 +54,16 @@ class SubscriptionListScreen extends ConsumerWidget {
                 Navigator.pop(context); // Close drawer
                 Navigator.of(context).push(
                   MaterialPageRoute(builder: (context) => const PaymentMethodListScreen()),
+                );
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.bar_chart),
+              title: const Text('統計・分析'),
+              onTap: () {
+                Navigator.pop(context); // Close drawer
+                Navigator.of(context).push(
+                  MaterialPageRoute(builder: (context) => const StatisticsScreen()),
                 );
               },
             ),
