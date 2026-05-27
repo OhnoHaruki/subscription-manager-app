@@ -15,17 +15,33 @@ class SubscriptionRepository {
     final userId = _client.auth.currentUser?.id;
     if (userId == null) return Stream.value([]);
 
+    // サブスクリプション本体のストリーム
     return _table
         .stream(primaryKey: ['id'])
         .eq('user_id', userId)
-        .map((maps) {
-          return maps.map((map) {
+        .asyncMap((maps) async {
+          final subscriptions = <Subscription>[];
+          
+          for (final map in maps) {
             final data = Map<String, dynamic>.from(map);
             data['id'] = map['id'];
             data['nextPaymentDate'] = data['next_payment_date'];
             data.remove('next_payment_date');
-            return Subscription.fromJson(data);
-          }).toList();
+
+            // 紐付いているタグのIDを取得
+            final tagResponse = await _client
+                .from('subscription_tags')
+                .select('tag_id')
+                .eq('subscription_id', map['id']);
+            
+            final tagIds = (tagResponse as List)
+                .map((item) => item['tag_id'] as String)
+                .toList();
+            
+            data['tags'] = tagIds;
+            subscriptions.add(Subscription.fromJson(data));
+          }
+          return subscriptions;
         });
   }
 
@@ -47,7 +63,18 @@ class SubscriptionRepository {
     };
 
     try {
-      await _table.insert(supabaseJson);
+      // サブスクリプションの挿入
+      final response = await _table.insert(supabaseJson).select().single();
+      final String subscriptionId = response['id'];
+
+      // タグの紐付け
+      if (subscription.tags.isNotEmpty) {
+        final List<Map<String, dynamic>> tagInserts = subscription.tags.map((tagId) => {
+          'subscription_id': subscriptionId,
+          'tag_id': tagId,
+        }).toList();
+        await _client.from('subscription_tags').insert(tagInserts);
+      }
     } catch (e) {
       if (e is PostgrestException) {
         print('Supabase Error: ${e.message}, Detail: ${e.details}');
@@ -70,7 +97,18 @@ class SubscriptionRepository {
       'payment_method_id': json['paymentMethod']?.isEmpty ?? true ? null : json['paymentMethod'],
     };
 
+    // サブスクリプション本体の更新
     await _table.update(supabaseJson).eq('id', id);
+
+    // タグの紐付け更新（一度全て削除して再登録）
+    await _client.from('subscription_tags').delete().eq('subscription_id', id);
+    if (subscription.tags.isNotEmpty) {
+      final List<Map<String, dynamic>> tagInserts = subscription.tags.map((tagId) => {
+        'subscription_id': id,
+        'tag_id': tagId,
+      }).toList();
+      await _client.from('subscription_tags').insert(tagInserts);
+    }
   }
 
   /// サブスクリプションを削除する
