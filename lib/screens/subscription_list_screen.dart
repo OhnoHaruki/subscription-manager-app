@@ -147,10 +147,12 @@ class _SubscriptionTile extends ConsumerWidget {
 
     // 支払い方法の名称を取得
     final paymentMethods = ref.watch(paymentMethodsProvider).value ?? [];
-    final paymentMethodName = paymentMethods
-        .where((m) => m.id == subscription.paymentMethod)
-        .map((m) => m.name)
-        .firstOrNull ?? '未設定';
+    final paymentMethod = paymentMethods.where((m) => m.id == subscription.paymentMethod).firstOrNull;
+    final paymentMethodName = paymentMethod?.name ?? '未設定';
+
+    // 有効期限警告のチェック
+    final expiringMethods = ref.watch(expiringPaymentMethodsProvider);
+    final isMethodExpiring = paymentMethod != null && expiringMethods.any((m) => m.id == paymentMethod.id);
 
     // タグ名を取得
     final allTags = ref.watch(tagsProvider).value ?? [];
@@ -160,7 +162,15 @@ class _SubscriptionTile extends ConsumerWidget {
       leading: CircleAvatar(
         child: Text(subscription.name.characters.first.toUpperCase()),
       ),
-      title: Text(subscription.name),
+      title: Row(
+        children: [
+          Text(subscription.name),
+          if (isMethodExpiring) ...[
+            const SizedBox(width: 8),
+            const Icon(Icons.warning_amber_rounded, size: 16, color: Colors.orange),
+          ],
+        ],
+      ),
       subtitle: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
