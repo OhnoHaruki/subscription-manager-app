@@ -164,9 +164,10 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                     );
 
                     if (confirm == true) {
+                      final navigator = Navigator.of(context);
                       await ref.read(authRepositoryProvider).signOut();
                       if (mounted) {
-                        Navigator.of(context).popUntil((route) => route.isFirst);
+                        navigator.popUntil((route) => route.isFirst);
                       }
                     }
                   },

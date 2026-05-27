@@ -15,16 +15,31 @@ class ProfileRepository {
     final userId = _client.auth.currentUser?.id;
     if (userId == null) return null;
 
-    final response = await _table
-        .select()
-        .eq('id', userId)
-        .single();
+    try {
+      final response = await _table
+          .select()
+          .eq('id', userId)
+          .maybeSingle();
 
-    final data = Map<String, dynamic>.from(response);
-    data['createdAt'] = data['created_at'];
-    data.remove('created_at');
-    
-    return Profile.fromJson(data);
+      if (response == null) {
+        // プロフィールが存在しない場合は新規作成
+        await _table.insert({
+          'id': userId,
+          'username': null,
+        });
+        
+        // 作成したプロフィールを再取得
+        final newResponse = await _table
+            .select()
+            .eq('id', userId)
+            .single();
+        return _mapToProfile(newResponse);
+      }
+
+      return _mapToProfile(response);
+    } catch (e) {
+      rethrow;
+    }
   }
 
   /// プロフィール情報を更新する
@@ -34,5 +49,13 @@ class ProfileRepository {
     };
 
     await _table.update(supabaseJson).eq('id', profile.id);
+  }
+
+  Profile _mapToProfile(Map<dynamic, dynamic> response) {
+    final data = Map<String, dynamic>.from(response);
+    data['createdAt'] = data['created_at'];
+    data.remove('created_at');
+    
+    return Profile.fromJson(data);
   }
 }
