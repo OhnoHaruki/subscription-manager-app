@@ -12,6 +12,7 @@ import 'profile_screen.dart';
 import 'subscription_history_screen.dart';
 import '../models/sort_settings.dart';
 import '../providers/tag_provider.dart';
+import '../widgets/common_views.dart';
 
 /// サブスクリプション一覧を表示するホーム画面
 class SubscriptionListScreen extends ConsumerStatefulWidget {
@@ -195,12 +196,11 @@ class _SubscriptionListScreenState extends ConsumerState<SubscriptionListScreen>
             child: subscriptionsAsync.when(
               data: (subscriptions) {
                 if (subscriptions.isEmpty) {
-                  return Center(
-                    child: Text(
-                      _isSearching || selectedTagIds.isNotEmpty
-                          ? '条件に一致するサブスクリプションが見つかりません'
-                          : 'サブスクリプションが登録されていません',
-                    ),
+                  return EmptyView(
+                    message: _isSearching || selectedTagIds.isNotEmpty
+                        ? '条件に一致するサブスクリプションが見つかりません'
+                        : 'サブスクリプションが登録されていません',
+                    icon: Icons.list_alt,
                   );
                 }
                 return ListView.builder(
@@ -211,8 +211,8 @@ class _SubscriptionListScreenState extends ConsumerState<SubscriptionListScreen>
                   },
                 );
               },
-              loading: () => const Center(child: CircularProgressIndicator()),
-              error: (error, stack) => Center(child: Text('エラーが発生しました: $error')),
+              loading: () => const LoadingView(),
+              error: (error, stack) => ErrorView(message: '読み込みに失敗しました: $error'),
             ),
           ),
         ],
