@@ -9,6 +9,7 @@ import 'payment_method_list_screen.dart';
 import 'tag_list_screen.dart';
 import 'statistics_screen.dart';
 import 'profile_screen.dart';
+import 'subscription_history_screen.dart';
 import '../models/sort_settings.dart';
 import '../providers/tag_provider.dart';
 
@@ -266,7 +267,6 @@ class _SubscriptionTile extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final formatter = NumberFormat.simpleCurrency(locale: 'ja_JP');
     final dateFormatter = DateFormat('yyyy/MM/dd');
 
     // 支払い方法の名称を取得
@@ -322,17 +322,33 @@ class _SubscriptionTile extends ConsumerWidget {
             ),
         ],
       ),
-      trailing: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        crossAxisAlignment: CrossAxisAlignment.end,
+      trailing: Row(
+        mainAxisSize: MainAxisSize.min,
         children: [
-          Text(
-            formatter.format(subscription.amount),
-            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+          IconButton(
+            icon: const Icon(Icons.check_circle_outline, color: Colors.green),
+            onPressed: () async {
+              await ref.read(subscriptionRepositoryProvider).markAsPaid(
+                subscription.id,
+                subscription.nextPaymentDate,
+                subscription.amount,
+              );
+              if (context.mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('支払いを記録しました')),
+                );
+              }
+            },
           ),
-          Text(
-            subscription.cycle == BillingCycle.monthly ? '月額' : '年額',
-            style: const TextStyle(fontSize: 12, color: Colors.grey),
+          IconButton(
+            icon: const Icon(Icons.history),
+            onPressed: () {
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (context) => SubscriptionHistoryScreen(subscriptionId: subscription.id),
+                ),
+              );
+            },
           ),
         ],
       ),

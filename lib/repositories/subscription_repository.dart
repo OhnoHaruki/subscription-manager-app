@@ -111,6 +111,36 @@ class SubscriptionRepository {
     }
   }
 
+  /// 支払い完了を記録し、次回支払日を更新する
+  Future<void> markAsPaid(String subscriptionId, DateTime currentNextPaymentDate, int amount) async {
+    final user = _client.auth.currentUser;
+    if (user == null) throw Exception('ログインが必要です');
+
+    // 次回支払日を計算（月額なら1ヶ月後、年額なら1年後）
+    // ※今回は簡略化のため、単純に1ヶ月/1年加算するロジック
+    // 実際にはBillingCycle enumを使用する
+    final subscription = await _table.select().eq('id', subscriptionId).single();
+    final cycle = subscription['cycle'] == 'monthly' ? 'monthly' : 'yearly';
+    
+    DateTime nextPaymentDate = currentNextPaymentDate;
+    if (cycle == 'monthly') {
+      nextPaymentDate = DateTime(nextPaymentDate.year, nextPaymentDate.month + 1, nextPaymentDate.day);
+    } else {
+      nextPaymentDate = DateTime(nextPaymentDate.year + 1, nextPaymentDate.month, nextPaymentDate.day);
+    }
+
+    // トランザクション的に処理（SupabaseはRPCを使うのが理想だが、ここでは順次実行）
+    await _client.from('payment_histories').insert({
+      'subscription_id': subscriptionId,
+      'paid_date': DateTime.now().toIso8601String(),
+      'amount': amount,
+    });
+
+    await _table.update({
+      'next_payment_date': nextPaymentDate.toIso8601String(),
+    }).eq('id', subscriptionId);
+  }
+
   /// サブスクリプションを削除する
   Future<void> deleteSubscription(String id) async {
     await _table.delete().eq('id', id);
