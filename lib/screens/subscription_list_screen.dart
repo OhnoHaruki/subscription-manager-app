@@ -9,6 +9,7 @@ import 'payment_method_list_screen.dart';
 import 'tag_list_screen.dart';
 import 'statistics_screen.dart';
 import 'profile_screen.dart';
+import '../models/sort_settings.dart';
 import '../providers/tag_provider.dart';
 
 /// サブスクリプション一覧を表示するホーム画面
@@ -70,6 +71,24 @@ class _SubscriptionListScreenState extends ConsumerState<SubscriptionListScreen>
               });
             },
             tooltip: _isSearching ? '検索を閉じる' : '検索',
+          ),
+          PopupMenuButton<SortSettings>(
+            icon: const Icon(Icons.sort),
+            onSelected: (settings) => ref.read(subscriptionSortOptionProvider.notifier).set(settings),
+            itemBuilder: (context) => [
+              PopupMenuItem(
+                value: SortSettings(option: SortOption.nextPaymentDate, order: SortOrder.asc),
+                child: const Text('支払日が近い順'),
+              ),
+              PopupMenuItem(
+                value: SortSettings(option: SortOption.amount, order: SortOrder.desc),
+                child: const Text('金額が高い順'),
+              ),
+              PopupMenuItem(
+                value: SortSettings(option: SortOption.amount, order: SortOrder.asc),
+                child: const Text('金額が低い順'),
+              ),
+            ],
           ),
           IconButton(
             icon: const Icon(Icons.person_outline),

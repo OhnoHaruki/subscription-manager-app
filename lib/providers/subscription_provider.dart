@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../models/subscription.dart';
+import '../models/sort_settings.dart';
 import '../repositories/subscription_repository.dart';
 
 /// Supabaseクライアントを提供するProvider
@@ -43,23 +44,44 @@ class SelectedFilterTagIds extends Notifier<List<String>> {
 
 final selectedFilterTagIdsProvider = NotifierProvider<SelectedFilterTagIds, List<String>>(SelectedFilterTagIds.new);
 
-/// フィルタリング適用後のサブスクリプション一覧を提供するProvider
+/// ソート設定を管理するNotifier
+class SubscriptionSortSettings extends Notifier<SortSettings> {
+  @override
+  SortSettings build() => SortSettings(option: SortOption.nextPaymentDate, order: SortOrder.asc);
+  void set(SortSettings settings) => state = settings;
+}
+
+final subscriptionSortOptionProvider = NotifierProvider<SubscriptionSortSettings, SortSettings>(SubscriptionSortSettings.new);
+
+/// フィルタリング・ソート適用後のサブスクリプション一覧を提供するProvider
 final filteredSubscriptionsProvider = Provider<AsyncValue<List<Subscription>>>((ref) {
   final subscriptionsAsync = ref.watch(subscriptionsProvider);
   final searchQuery = ref.watch(subscriptionSearchQueryProvider).toLowerCase();
   final selectedTagIds = ref.watch(selectedFilterTagIdsProvider);
+  final sortSettings = ref.watch(subscriptionSortOptionProvider);
 
   return subscriptionsAsync.whenData((subscriptions) {
-    return subscriptions.where((sub) {
-      // 名前による検索
+    var list = subscriptions.where((sub) {
       final matchesSearch = sub.name.toLowerCase().contains(searchQuery);
-      
-      // タグによる絞り込み（選択されているタグがいずれか1つでも含まれていればマッチ、未選択なら全てマッチ）
       final matchesTags = selectedTagIds.isEmpty || 
           selectedTagIds.any((tagId) => sub.tags.contains(tagId));
-
       return matchesSearch && matchesTags;
     }).toList();
+
+    list.sort((a, b) {
+      int comparison = 0;
+      switch (sortSettings.option) {
+        case SortOption.amount:
+          comparison = a.amount.compareTo(b.amount);
+          break;
+        case SortOption.nextPaymentDate:
+          comparison = a.nextPaymentDate.compareTo(b.nextPaymentDate);
+          break;
+      }
+      return sortSettings.order == SortOrder.asc ? comparison : -comparison;
+    });
+
+    return list;
   });
 });
 
@@ -71,7 +93,6 @@ final monthlyTotalAmountProvider = Provider<double>((ref) {
     if (sub.cycle == BillingCycle.monthly) {
       return previousValue + sub.amount;
     } else {
-      // 年額の場合は月額換算（12分割）して合算
       return previousValue + (sub.amount / 12);
     }
   });
