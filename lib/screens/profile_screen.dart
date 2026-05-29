@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../providers/auth_provider.dart';
 import '../providers/profile_provider.dart';
 import '../providers/theme_provider.dart';
+import 'privacy_policy_screen.dart';
 
 class ProfileScreen extends ConsumerStatefulWidget {
   const ProfileScreen({super.key});
@@ -174,45 +175,96 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                   ),
                 ),
               
+              const SizedBox(height: 24),
+              
+              ListTile(
+                leading: const Icon(Icons.description),
+                title: const Text('プライバシーポリシー'),
+                trailing: const Icon(Icons.chevron_right),
+                onTap: () {
+                  Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (context) => const PrivacyPolicyScreen(),
+                    ),
+                  );
+                },
+              ),
+              const Divider(),
+              
               const SizedBox(height: 40),
               
               // ログアウトボタン
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16),
-                child: OutlinedButton.icon(
-                  onPressed: () async {
-                    final navigator = Navigator.of(context);
-                    
-                    final confirm = await showDialog<bool>(
-                      context: context,
-                      builder: (context) => AlertDialog(
-                        title: const Text('ログアウト'),
-                        content: const Text('ログアウトしてもよろしいですか？'),
-                        actions: [
-                          TextButton(
-                            onPressed: () => Navigator.pop(context, false),
-                            child: const Text('キャンセル'),
+                child: Column(
+                  children: [
+                    OutlinedButton.icon(
+                      onPressed: () async {
+                        final navigator = Navigator.of(context);
+                        
+                        final confirm = await showDialog<bool>(
+                          context: context,
+                          builder: (context) => AlertDialog(
+                            title: const Text('ログアウト'),
+                            content: const Text('ログアウトしてもよろしいですか？'),
+                            actions: [
+                              TextButton(
+                                onPressed: () => Navigator.pop(context, false),
+                                child: const Text('キャンセル'),
+                              ),
+                              TextButton(
+                                onPressed: () => Navigator.pop(context, true),
+                                child: const Text('ログアウト', style: TextStyle(color: Colors.red)),
+                              ),
+                            ],
                           ),
-                          TextButton(
-                            onPressed: () => Navigator.pop(context, true),
-                            child: const Text('ログアウト', style: TextStyle(color: Colors.red)),
-                          ),
-                        ],
-                      ),
-                    );
+                        );
 
-                    if (confirm == true) {
-                      await ref.read(authRepositoryProvider).signOut();
-                      if (mounted) {
-                        navigator.popUntil((route) => route.isFirst);
-                      }
-                    }
-                  },
-                  icon: const Icon(Icons.logout, color: Colors.red),
-                  label: const Text('ログアウト', style: TextStyle(color: Colors.red)),
-                  style: OutlinedButton.styleFrom(
-                    side: const BorderSide(color: Colors.red),
-                  ),
+                        if (confirm == true) {
+                          await ref.read(authRepositoryProvider).signOut();
+                          if (mounted) {
+                            navigator.popUntil((route) => route.isFirst);
+                          }
+                        }
+                      },
+                      icon: const Icon(Icons.logout, color: Colors.red),
+                      label: const Text('ログアウト', style: TextStyle(color: Colors.red)),
+                      style: OutlinedButton.styleFrom(
+                        side: const BorderSide(color: Colors.red),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    TextButton(
+                      onPressed: () async {
+                        final confirm = await showDialog<bool>(
+                          context: context,
+                          builder: (context) => AlertDialog(
+                            title: const Text('アカウント削除', style: TextStyle(color: Colors.red)),
+                            content: const Text('アカウントと全てのデータを削除しますか？この操作は取り消せません。'),
+                            actions: [
+                              TextButton(
+                                onPressed: () => Navigator.pop(context, false),
+                                child: const Text('キャンセル'),
+                              ),
+                              TextButton(
+                                onPressed: () => Navigator.pop(context, true),
+                                child: const Text('削除する', style: TextStyle(color: Colors.red)),
+                              ),
+                            ],
+                          ),
+                        );
+
+                        if (confirm == true) {
+                          final navigator = Navigator.of(context);
+                          await ref.read(profileRepositoryProvider).deleteUser();
+                          if (mounted) {
+                            navigator.popUntil((route) => route.isFirst);
+                          }
+                        }
+                      },
+                      child: const Text('アカウントを削除する', style: TextStyle(color: Colors.red)),
+                    ),
+                  ],
                 ),
               ),
             ],

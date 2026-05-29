@@ -107,5 +107,11 @@ void main() {
     expect(find.text('プロフィール'), findsAtLeastNWidgets(1));
     expect(find.text('Test User'), findsOneWidget);
     expect(find.text('test@example.com'), findsOneWidget);
+
+    // プライバシーポリシーへ遷移
+    await tester.tap(find.text('プライバシーポリシー'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('プライバシーポリシー'), findsAtLeastNWidgets(1));
   });
 }

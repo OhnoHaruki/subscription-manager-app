@@ -10,6 +10,7 @@ import 'tag_list_screen.dart';
 import 'statistics_screen.dart';
 import 'profile_screen.dart';
 import 'subscription_history_screen.dart';
+import 'privacy_policy_screen.dart';
 import '../models/sort_settings.dart';
 import '../providers/tag_provider.dart';
 import '../widgets/common_views.dart';
@@ -150,6 +151,17 @@ class _SubscriptionListScreenState extends ConsumerState<SubscriptionListScreen>
                 Navigator.pop(context); // Close drawer
                 Navigator.of(context).push(
                   MaterialPageRoute(builder: (context) => const TagListScreen()),
+                );
+              },
+            ),
+            const Divider(),
+            ListTile(
+              leading: const Icon(Icons.description),
+              title: const Text('プライバシーポリシー'),
+              onTap: () {
+                Navigator.pop(context); // Close drawer
+                Navigator.of(context).push(
+                  MaterialPageRoute(builder: (context) => const PrivacyPolicyScreen()),
                 );
               },
             ),

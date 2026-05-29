@@ -51,6 +51,15 @@ class ProfileRepository {
     await _table.update(supabaseJson).eq('id', profile.id);
   }
 
+  /// アカウントを削除する
+  Future<void> deleteUser() async {
+    final user = _client.auth.currentUser;
+    if (user == null) throw Exception('ログインが必要です');
+
+    await _client.functions.invoke('delete-user', body: {'user_id': user.id});
+    await _client.auth.signOut();
+  }
+
   Profile _mapToProfile(Map<dynamic, dynamic> response) {
     final data = Map<String, dynamic>.from(response);
     data['createdAt'] = data['created_at'];
