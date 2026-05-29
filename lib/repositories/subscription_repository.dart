@@ -76,9 +76,6 @@ class SubscriptionRepository {
         await _client.from('subscription_tags').insert(tagInserts);
       }
     } catch (e) {
-      if (e is PostgrestException) {
-        print('Supabase Error: ${e.message}, Detail: ${e.details}');
-      }
       rethrow;
     }
   }

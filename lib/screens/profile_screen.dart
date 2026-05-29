@@ -236,6 +236,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                     const SizedBox(height: 16),
                     TextButton(
                       onPressed: () async {
+                        final navigator = Navigator.of(context);
                         final confirm = await showDialog<bool>(
                           context: context,
                           builder: (context) => AlertDialog(
@@ -255,7 +256,6 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                         );
 
                         if (confirm == true) {
-                          final navigator = Navigator.of(context);
                           await ref.read(profileRepositoryProvider).deleteUser();
                           if (mounted) {
                             navigator.popUntil((route) => route.isFirst);

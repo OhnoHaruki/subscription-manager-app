@@ -1,7 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:subscription_manager/providers/stats_provider.dart';
 import 'package:subscription_manager/models/subscription.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 void main() {
   test('SubscriptionStats計算のテスト', () {
