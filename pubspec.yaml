@@ -41,6 +41,8 @@ dependencies:
   json_annotation: ^4.11.0
   riverpod_annotation: ^4.0.2
   intl: ^0.20.2
+  shared_preferences: ^2.5.5
+  flutter_markdown: ^0.7.7+1
   flutter_dotenv: ^5.2.1
 
 dev_dependencies:
@@ -73,6 +75,7 @@ flutter:
 
   assets:
     - .env
+    - PRIVACY_POLICY.md
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images

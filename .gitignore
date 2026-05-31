@@ -40,6 +40,9 @@ migrate_working_dir/
 # Symbolication related
 app.*.symbols
 
+# Supabase
+supabase/.temp/
+
 # Environment variables
 .env
 .env.*
