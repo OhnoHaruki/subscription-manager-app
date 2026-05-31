@@ -1,4 +1,4 @@
-enum SortOption { amount, nextPaymentDate }
+enum SortOption { amount, nextPaymentDate, name }
 enum SortOrder { asc, desc }
 
 class SortSettings {

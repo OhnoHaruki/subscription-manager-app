@@ -77,6 +77,9 @@ final filteredSubscriptionsProvider = Provider<AsyncValue<List<Subscription>>>((
         case SortOption.nextPaymentDate:
           comparison = a.nextPaymentDate.compareTo(b.nextPaymentDate);
           break;
+        case SortOption.name:
+          comparison = a.name.compareTo(b.name);
+          break;
       }
       return sortSettings.order == SortOrder.asc ? comparison : -comparison;
     });

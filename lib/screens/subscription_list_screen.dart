@@ -99,6 +99,14 @@ class _SubscriptionListScreenState extends ConsumerState<SubscriptionListScreen>
                 value: SortSettings(option: SortOption.amount, order: SortOrder.asc),
                 child: const Text('金額が低い順'),
               ),
+              PopupMenuItem(
+                value: SortSettings(option: SortOption.name, order: SortOrder.asc),
+                child: const Text('名前順（昇順）'),
+              ),
+              PopupMenuItem(
+                value: SortSettings(option: SortOption.name, order: SortOrder.desc),
+                child: const Text('名前順（降順）'),
+              ),
             ],
           ),
           IconButton(
