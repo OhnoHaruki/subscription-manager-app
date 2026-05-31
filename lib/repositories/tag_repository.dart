@@ -43,4 +43,9 @@ class TagRepository {
   Future<void> deleteTag(String id) async {
     await _table.delete().eq('id', id);
   }
+
+  /// タグ名を更新する
+  Future<void> updateTag(String id, String name) async {
+    await _table.update({'name': name}).eq('id', id);
+  }
 }

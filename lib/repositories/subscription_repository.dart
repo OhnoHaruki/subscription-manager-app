@@ -20,30 +20,34 @@ class SubscriptionRepository {
         .stream(primaryKey: ['id'])
         .eq('user_id', userId)
         .asyncMap((maps) async {
-          final subscriptions = <Subscription>[];
-          
-          for (final map in maps) {
+          if (maps.isEmpty) return [];
+
+          final subscriptionIds = maps.map((m) => m['id'] as String).toList();
+
+          // 紐付いているタグを一括取得 (Batch query)
+          final tagResponse = await _client
+              .from('subscription_tags')
+              .select('subscription_id, tag_id')
+              .inFilter('subscription_id', subscriptionIds);
+
+          final tagsMap = <String, List<String>>{};
+          for (final row in tagResponse as List) {
+            final subId = row['subscription_id'] as String;
+            final tagId = row['tag_id'] as String;
+            tagsMap.putIfAbsent(subId, () => []).add(tagId);
+          }
+
+          return maps.map((map) {
             final data = Map<String, dynamic>.from(map);
             data['id'] = map['id'];
             data['nextPaymentDate'] = data['next_payment_date'];
             data.remove('next_payment_date');
-
-            // 紐付いているタグのIDを取得
-            final tagResponse = await _client
-                .from('subscription_tags')
-                .select('tag_id')
-                .eq('subscription_id', map['id']);
-            
-            final tagIds = (tagResponse as List)
-                .map((item) => item['tag_id'] as String)
-                .toList();
-            
-            data['tags'] = tagIds;
-            subscriptions.add(Subscription.fromJson(data));
-          }
-          return subscriptions;
+            data['tags'] = tagsMap[map['id']] ?? [];
+            return Subscription.fromJson(data);
+          }).toList();
         });
-  }
+    }
+
 
   /// 新規サブスクリプションを追加する
   Future<void> addSubscription(Subscription subscription) async {

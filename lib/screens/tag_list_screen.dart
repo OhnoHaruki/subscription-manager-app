@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../models/tag.dart';
 import '../providers/tag_provider.dart';
 
 class TagListScreen extends ConsumerWidget {
@@ -23,9 +24,18 @@ class TagListScreen extends ConsumerWidget {
                   return ListTile(
                     leading: const Icon(Icons.label),
                     title: Text(tag.name),
-                    trailing: IconButton(
-                      icon: const Icon(Icons.delete, color: Colors.red),
-                      onPressed: () => _deleteTag(context, ref, tag),
+                    trailing: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        IconButton(
+                          icon: const Icon(Icons.edit),
+                          onPressed: () => _editTag(context, ref, tag),
+                        ),
+                        IconButton(
+                          icon: const Icon(Icons.delete, color: Colors.red),
+                          onPressed: () => _deleteTag(context, ref, tag),
+                        ),
+                      ],
                     ),
                   );
                 },
@@ -40,12 +50,18 @@ class TagListScreen extends ConsumerWidget {
     );
   }
 
-  Future<void> _addTag(BuildContext context, WidgetRef ref) async {
-    final controller = TextEditingController();
+  Future<void> _showTagDialog({
+    required BuildContext context,
+    String? initialName,
+    required String title,
+    required String confirmLabel,
+    required Function(String) onConfirm,
+  }) async {
+    final controller = TextEditingController(text: initialName);
     final name = await showDialog<String>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('タグの追加'),
+        title: Text(title),
         content: TextField(
           controller: controller,
           decoration: const InputDecoration(labelText: 'タグ名'),
@@ -58,18 +74,37 @@ class TagListScreen extends ConsumerWidget {
           ),
           TextButton(
             onPressed: () => Navigator.pop(context, controller.text),
-            child: const Text('追加'),
+            child: Text(confirmLabel),
           ),
         ],
       ),
     );
 
     if (name != null && name.trim().isNotEmpty) {
-      await ref.read(tagRepositoryProvider).addTag(name.trim());
+      await onConfirm(name.trim());
     }
   }
 
-  Future<void> _deleteTag(BuildContext context, WidgetRef ref, dynamic tag) async {
+  Future<void> _addTag(BuildContext context, WidgetRef ref) async {
+    await _showTagDialog(
+      context: context,
+      title: 'タグの追加',
+      confirmLabel: '追加',
+      onConfirm: (name) => ref.read(tagRepositoryProvider).addTag(name),
+    );
+  }
+
+  Future<void> _editTag(BuildContext context, WidgetRef ref, Tag tag) async {
+    await _showTagDialog(
+      context: context,
+      initialName: tag.name,
+      title: 'タグの編集',
+      confirmLabel: '保存',
+      onConfirm: (name) => ref.read(tagRepositoryProvider).updateTag(tag.id, name),
+    );
+  }
+
+  Future<void> _deleteTag(BuildContext context, WidgetRef ref, Tag tag) async {
     final confirm = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
