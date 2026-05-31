@@ -40,6 +40,11 @@ migrate_working_dir/
 # Symbolication related
 app.*.symbols
 
+# Environment variables
+.env
+.env.*
+!.env.example
+
 # Obfuscation related
 app.*.map.json
 
