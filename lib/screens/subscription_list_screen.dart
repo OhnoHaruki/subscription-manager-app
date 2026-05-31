@@ -49,9 +49,17 @@ class _SubscriptionListScreenState extends ConsumerState<SubscriptionListScreen>
             ? TextField(
                 controller: _searchController,
                 autofocus: true,
-                decoration: const InputDecoration(
+                style: const TextStyle(color: Colors.black87),
+                decoration: InputDecoration(
                   hintText: 'サービス名で検索...',
                   border: InputBorder.none,
+                  suffixIcon: IconButton(
+                    icon: const Icon(Icons.clear),
+                    onPressed: () {
+                      _searchController.clear();
+                      ref.read(subscriptionSearchQueryProvider.notifier).set('');
+                    },
+                  ),
                 ),
                 onChanged: (value) {
                   ref.read(subscriptionSearchQueryProvider.notifier).set(value);
@@ -177,26 +185,38 @@ class _SubscriptionListScreenState extends ConsumerState<SubscriptionListScreen>
           tagsAsync.when(
             data: (tags) => tags.isEmpty
                 ? const SizedBox.shrink()
-                : SizedBox(
+                : Container(
                     height: 50,
-                    child: ListView.builder(
+                    margin: const EdgeInsets.only(bottom: 8),
+                    child: ListView(
                       scrollDirection: Axis.horizontal,
                       padding: const EdgeInsets.symmetric(horizontal: 16),
-                      itemCount: tags.length,
-                      itemBuilder: (context, index) {
-                        final tag = tags[index];
-                        final isSelected = selectedTagIds.contains(tag.id);
-                        return Padding(
-                          padding: const EdgeInsets.only(right: 8),
-                          child: FilterChip(
-                            label: Text(tag.name, style: const TextStyle(fontSize: 12)),
-                            selected: isSelected,
-                            onSelected: (selected) {
-                              ref.read(selectedFilterTagIdsProvider.notifier).toggle(tag.id);
-                            },
+                      children: [
+                        if (selectedTagIds.isNotEmpty)
+                          Padding(
+                            padding: const EdgeInsets.only(right: 8),
+                            child: ActionChip(
+                              avatar: const Icon(Icons.close, size: 16),
+                              label: const Text('クリア'),
+                              onPressed: () {
+                                ref.read(selectedFilterTagIdsProvider.notifier).clear();
+                              },
+                            ),
                           ),
-                        );
-                      },
+                        ...tags.map((tag) {
+                          final isSelected = selectedTagIds.contains(tag.id);
+                          return Padding(
+                            padding: const EdgeInsets.only(right: 8),
+                            child: FilterChip(
+                              label: Text(tag.name, style: const TextStyle(fontSize: 12)),
+                              selected: isSelected,
+                              onSelected: (selected) {
+                                ref.read(selectedFilterTagIdsProvider.notifier).toggle(tag.id);
+                              },
+                            ),
+                          );
+                        }),
+                      ],
                     ),
                   ),
             loading: () => const SizedBox(height: 50),
@@ -294,6 +314,8 @@ class _SubscriptionTile extends ConsumerWidget {
     final allTags = ref.watch(tagsProvider).value ?? [];
     final subscriptionTags = allTags.where((t) => subscription.tags.contains(t.id)).toList();
 
+    final formatter = NumberFormat.simpleCurrency(locale: 'ja_JP');
+
     return ListTile(
       leading: CircleAvatar(
         child: Text(subscription.name.characters.first.toUpperCase()),
@@ -337,8 +359,23 @@ class _SubscriptionTile extends ConsumerWidget {
       trailing: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
+          Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              Text(
+                formatter.format(subscription.amount),
+                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+              ),
+              Text(
+                subscription.cycle == BillingCycle.monthly ? '月額' : '年額',
+                style: const TextStyle(fontSize: 12, color: Colors.grey),
+              ),
+            ],
+          ),
+          const SizedBox(width: 8),
           IconButton(
-            icon: const Icon(Icons.check_circle_outline, color: Colors.green),
+            icon: const Icon(Icons.check_circle_outline, color: Colors.green, size: 20),
             onPressed: () async {
               await ref.read(subscriptionRepositoryProvider).markAsPaid(
                 subscription.id,
@@ -351,9 +388,11 @@ class _SubscriptionTile extends ConsumerWidget {
                 );
               }
             },
+            padding: EdgeInsets.zero,
+            constraints: const BoxConstraints(),
           ),
           IconButton(
-            icon: const Icon(Icons.history),
+            icon: const Icon(Icons.history, size: 20),
             onPressed: () {
               Navigator.of(context).push(
                 MaterialPageRoute(
@@ -361,6 +400,8 @@ class _SubscriptionTile extends ConsumerWidget {
                 ),
               );
             },
+            padding: const EdgeInsets.only(left: 8),
+            constraints: const BoxConstraints(),
           ),
         ],
       ),
