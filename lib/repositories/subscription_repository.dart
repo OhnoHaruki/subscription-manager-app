@@ -49,9 +49,6 @@ class SubscriptionRepository {
     try {
       await _table.insert(supabaseJson);
     } catch (e) {
-      if (e is PostgrestException) {
-        print('Supabase Error: ${e.message}, Detail: ${e.details}');
-      }
       rethrow;
     }
   }
