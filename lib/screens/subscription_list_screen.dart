@@ -170,6 +170,9 @@ class _SubscriptionListScreenState extends ConsumerState<SubscriptionListScreen>
       ),
       body: Column(
         children: [
+          // 有効期限警告バナー
+          const _ExpiryAlertBanner(),
+          
           // 合計金額表示エリア
           _TotalAmountCard(amount: totalAmount),
 
@@ -237,6 +240,65 @@ class _SubscriptionListScreenState extends ConsumerState<SubscriptionListScreen>
           );
         },
         child: const Icon(Icons.add),
+      ),
+    );
+  }
+}
+
+/// 有効期限警告バナー
+class _ExpiryAlertBanner extends ConsumerWidget {
+  const _ExpiryAlertBanner();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final expiringMethods = ref.watch(expiringPaymentMethodsProvider);
+    if (expiringMethods.isEmpty) return const SizedBox.shrink();
+
+    final isAnyExpired = expiringMethods.any((m) => m.expiryDate != null && m.expiryDate!.isBefore(DateTime.now()));
+
+    return Container(
+      width: double.infinity,
+      margin: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      decoration: BoxDecoration(
+        color: isAnyExpired ? Colors.red.shade50 : Colors.orange.shade50,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: isAnyExpired ? Colors.red.shade200 : Colors.orange.shade200,
+        ),
+      ),
+      child: InkWell(
+        onTap: () {
+          Navigator.of(context).push(
+            MaterialPageRoute(builder: (context) => const PaymentMethodListScreen()),
+          );
+        },
+        child: Row(
+          children: [
+            Icon(
+              Icons.warning_amber_rounded,
+              color: isAnyExpired ? Colors.red : Colors.orange,
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Text(
+                isAnyExpired
+                    ? '有効期限が切れている支払い方法があります'
+                    : '有効期限が近い支払い方法があります',
+                style: TextStyle(
+                  color: isAnyExpired ? Colors.red.shade900 : Colors.orange.shade900,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 13,
+                ),
+              ),
+            ),
+            Icon(
+              Icons.chevron_right,
+              color: isAnyExpired ? Colors.red : Colors.orange,
+              size: 20,
+            ),
+          ],
+        ),
       ),
     );
   }

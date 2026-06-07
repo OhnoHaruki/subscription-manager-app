@@ -289,8 +289,18 @@ class _CommaTextInputFormatter extends TextInputFormatter {
       );
     }
 
-    // 数字以外を除去
-    final cleanText = newValue.text.replaceAll(',', '');
+    // 全角数字を半角数字に変換
+    String text = newValue.text;
+    final fullWidthMap = {
+      '０': '0', '１': '1', '２': '2', '３': '3', '４': '4',
+      '５': '5', '６': '6', '７': '7', '８': '8', '９': '9',
+    };
+    fullWidthMap.forEach((full, half) {
+      text = text.replaceAll(full, half);
+    });
+
+    // 数字以外（カンマ等）を除去
+    final cleanText = text.replaceAll(RegExp(r'[^0-9]'), '');
     final intValue = int.tryParse(cleanText);
     if (intValue == null) return oldValue;
 
@@ -298,16 +308,19 @@ class _CommaTextInputFormatter extends TextInputFormatter {
     final newText = NumberFormat('#,###').format(intValue);
 
     // カーソル位置の再計算
+    // 新しいテキスト内での数字の出現回数に基づいてカーソル位置を調整する
     int selectionIndex = newValue.selection.end;
     if (selectionIndex < 0) selectionIndex = 0;
 
+    // 元の入力文字列（全角変換後）において、カーソルより前にあった「数字」の数を数える
     int digitsBeforeCursor = 0;
-    for (int i = 0; i < selectionIndex; i++) {
-      if (i < newValue.text.length && RegExp(r'[0-9]').hasMatch(newValue.text[i])) {
+    for (int i = 0; i < selectionIndex && i < text.length; i++) {
+      if (RegExp(r'[0-9]').hasMatch(text[i])) {
         digitsBeforeCursor++;
       }
     }
 
+    // 新しいカンマ区切り文字列の中で、同じ数だけの「数字」が現れる位置を特定する
     int newSelectionIndex = 0;
     int digitsFound = 0;
     while (digitsFound < digitsBeforeCursor && newSelectionIndex < newText.length) {
