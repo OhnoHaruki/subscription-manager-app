@@ -1,77 +1,97 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../models/subscription.dart';
 
-/// サブスクリプションデータの取得・保存を管理するリポジトリクラス
 class SubscriptionRepository {
-  SubscriptionRepository(this._client);
-
   final SupabaseClient _client;
 
-  /// Supabaseのテーブル参照
-  SupabaseQueryBuilder get _table => _client.from('subscriptions');
+  SubscriptionRepository(this._client);
 
-  /// サブスクリプション一覧をリアルタイムで取得する
-  Stream<List<Subscription>> watchSubscriptions() {
-    final userId = _client.auth.currentUser?.id;
-    if (userId == null) return Stream.value([]);
+  PostgrestQueryBuilder get _table => _client.from('subscriptions');
 
-    return _table
-        .stream(primaryKey: ['id'])
-        .eq('user_id', userId)
-        .map((maps) {
-          return maps.map((map) {
-            final data = Map<String, dynamic>.from(map);
-            data['id'] = map['id'];
-            data['nextPaymentDate'] = data['next_payment_date'];
-            data.remove('next_payment_date');
-            return Subscription.fromJson(data);
-          }).toList();
-        });
+  /// 全てのサブスクリプションを取得
+  Future<List<Subscription>> getAllSubscriptions() async {
+    final response = await _table.select('*, tags:subscription_tags(tag_id)').order('created_at');
+    return (response as List).map((data) => Subscription.fromJson(data)).toList();
   }
 
-  /// 新規サブスクリプションを追加する
+  /// リアルタイムでサブスクリプション一覧を監視
+  Stream<List<Subscription>> watchSubscriptions() {
+    return _client
+        .from('subscriptions')
+        .stream(primaryKey: ['id'])
+        .order('created_at')
+        .map((data) => data.map((json) => Subscription.fromJson(json)).toList());
+  }
+
+  /// サブスクリプションを追加
   Future<void> addSubscription(Subscription subscription) async {
     final user = _client.auth.currentUser;
-    if (user == null) throw Exception('ログインが必要です');
+    if (user == null) throw Exception('User not logged in');
 
-    final json = subscription.toJson();
-    
-    // Supabaseのテーブル定義に合わせたJSONを構築
-    final Map<String, dynamic> supabaseJson = {
+    final supabaseJson = {
+      ...subscription.toJson(),
       'user_id': user.id,
-      'name': json['name'],
-      'amount': json['amount'],
-      'cycle': json['cycle'],
-      'next_payment_date': json['nextPaymentDate'],
-      'payment_method_id': json['paymentMethod']?.isEmpty ?? true ? null : json['paymentMethod'],
     };
+    // idは自動生成されるため除外
+    supabaseJson.remove('id');
+    // tagsは別テーブルで管理するため除外
+    supabaseJson.remove('tags');
 
     try {
-      await _table.insert(supabaseJson);
+      // サブスクリプションの挿入
+      final response = await _table.insert(supabaseJson).select().single();
+      final String subscriptionId = response['id'];
+
+      // タグの紐付け
+      if (subscription.tags.isNotEmpty) {
+        final List<Map<String, dynamic>> tagInserts = subscription.tags.map((tagId) => {
+          'subscription_id': subscriptionId,
+          'tag_id': tagId,
+        }).toList();
+        await _client.from('subscription_tags').insert(tagInserts);
+      }
     } catch (e) {
       rethrow;
     }
   }
 
-  /// サブスクリプション情報を更新する
+  /// サブスクリプションを更新
   Future<void> updateSubscription(Subscription subscription) async {
-    final json = subscription.toJson();
-    final id = json['id'];
-    
-    // Supabaseのテーブル定義に合わせたJSONを構築
-    final Map<String, dynamic> supabaseJson = {
-      'name': json['name'],
-      'amount': json['amount'],
-      'cycle': json['cycle'],
-      'next_payment_date': json['nextPaymentDate'],
-      'payment_method_id': json['paymentMethod']?.isEmpty ?? true ? null : json['paymentMethod'],
-    };
+    final user = _client.auth.currentUser;
+    if (user == null) throw Exception('User not logged in');
 
-    await _table.update(supabaseJson).eq('id', id);
+    final supabaseJson = {
+      ...subscription.toJson(),
+      'user_id': user.id,
+    };
+    // tagsは別テーブルで管理するため除外
+    supabaseJson.remove('tags');
+
+    try {
+      await _table.update(supabaseJson).eq('id', subscription.id);
+
+      // タグの更新（一度削除して再登録）
+      await _client.from('subscription_tags').delete().eq('subscription_id', subscription.id);
+      if (subscription.tags.isNotEmpty) {
+        final List<Map<String, dynamic>> tagInserts = subscription.tags.map((tagId) => {
+          'subscription_id': subscription.id,
+          'tag_id': tagId,
+        }).toList();
+        await _client.from('subscription_tags').insert(tagInserts);
+      }
+    } catch (e) {
+      rethrow;
+    }
   }
 
-  /// サブスクリプションを削除する
+  /// サブスクリプションを削除
   Future<void> deleteSubscription(String id) async {
-    await _table.delete().eq('id', id);
+    try {
+      // 外部キー制約により、subscription_tagsも削除される（CASCADE想定）
+      // もしCASCADEでない場合は、明示的に削除する必要がある
+      await _table.delete().eq('id', id);
+    } catch (e) {
+      rethrow;
+    }
   }
 }
