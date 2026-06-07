@@ -1,3 +1,4 @@
+import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
@@ -11,6 +12,7 @@ class StatisticsScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final stats = ref.watch(subscriptionStatsProvider);
     final tagsAsync = ref.watch(tagsProvider);
+    final trendAsync = ref.watch(monthlyExpenditureTrendProvider);
     final currencyFormat = NumberFormat.simpleCurrency(locale: 'ja_JP');
 
     return Scaffold(
@@ -20,6 +22,44 @@ class StatisticsScreen extends ConsumerWidget {
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
+          // 支出トレンドグラフ
+          const Text('支出推移（過去6ヶ月）', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+          const SizedBox(height: 16),
+          SizedBox(
+            height: 200,
+            child: trendAsync.when(
+              data: (trend) {
+                final spots = trend.entries.toList().asMap().entries.map((e) => FlSpot(e.key.toDouble(), e.value.value)).toList();
+                return LineChart(LineChartData(
+                  lineBarsData: [
+                    LineChartBarData(
+                      spots: spots,
+                      isCurved: true,
+                      color: Theme.of(context).colorScheme.primary,
+                      barWidth: 4,
+                    )
+                  ],
+                  titlesData: FlTitlesData(
+                    bottomTitles: AxisTitles(
+                      sideTitles: SideTitles(
+                        showTitles: true,
+                        getTitlesWidget: (value, meta) => Text(trend.keys.toList()[value.toInt()].split('-')[1]),
+                      ),
+                    ),
+                    leftTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                    rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                    topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                  ),
+                  gridData: const FlGridData(show: false),
+                  borderData: FlBorderData(show: false),
+                ));
+              },
+              loading: () => const Center(child: CircularProgressIndicator()),
+              error: (e, st) => Text('グラフ読み込みエラー: $e'),
+            ),
+          ),
+          const SizedBox(height: 24),
+
           // 総計カード
           Card(
             child: Padding(
@@ -79,7 +119,6 @@ class StatisticsScreen extends ConsumerWidget {
                               final ratio = entry.value / stats.monthlyTotal;
                               if (ratio < 0.01) return const SizedBox.shrink();
                               
-                              // タグごとに色を変える（簡易実装）
                               final color = Colors.primaries[sortedEntries.indexOf(entry) % Colors.primaries.length];
                               
                               return Expanded(

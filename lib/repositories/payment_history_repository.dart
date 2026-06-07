@@ -10,6 +10,22 @@ class PaymentHistoryRepository {
   /// Supabaseのテーブル参照
   SupabaseQueryBuilder get _table => _client.from('payment_histories');
 
+  /// 全ての支払い履歴を取得する
+  Future<List<PaymentHistory>> getAllHistory() async {
+    final response = await _table
+        .select()
+        .order('paid_date', ascending: false);
+
+    return (response as List).map((map) {
+      final data = Map<String, dynamic>.from(map);
+      data['id'] = map['id'];
+      data['subscriptionId'] = map['subscription_id'];
+      data['paidDate'] = map['paid_date'];
+      data['amount'] = map['amount'];
+      return PaymentHistory.fromJson(data);
+    }).toList();
+  }
+
   /// 特定のサブスクリプションの支払い履歴を取得する
   Future<List<PaymentHistory>> getHistory(String subscriptionId) async {
     final response = await _table

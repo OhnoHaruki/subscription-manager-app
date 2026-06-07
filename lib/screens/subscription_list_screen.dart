@@ -1,4 +1,6 @@
+import 'dart:io' show Platform;
 import 'package:flutter/material.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import '../models/subscription.dart';
@@ -26,6 +28,40 @@ class SubscriptionListScreen extends ConsumerStatefulWidget {
 class _SubscriptionListScreenState extends ConsumerState<SubscriptionListScreen> {
   bool _isSearching = false;
   final _searchController = TextEditingController();
+
+  @override
+  void initState() {
+    super.initState();
+    // テスト時は通知権限リクエストをスキップ
+    if (!const bool.fromEnvironment('dart.vm.product') && 
+        !Platform.environment.containsKey('FLUTTER_TEST')) {
+      _requestNotificationPermissions();
+    }
+  }
+
+  Future<void> _requestNotificationPermissions() async {
+    final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
+        FlutterLocalNotificationsPlugin();
+    
+    // 権限リクエスト
+    try {
+      await flutterLocalNotificationsPlugin
+          .resolvePlatformSpecificImplementation<
+              AndroidFlutterLocalNotificationsPlugin>()
+          ?.requestNotificationsPermission();
+      
+      await flutterLocalNotificationsPlugin
+          .resolvePlatformSpecificImplementation<
+              IOSFlutterLocalNotificationsPlugin>()
+          ?.requestPermissions(
+            alert: true,
+            badge: true,
+            sound: true,
+          );
+    } catch (e) {
+      debugPrint('通知権限の取得に失敗しました: $e');
+    }
+  }
 
   @override
   void dispose() {
