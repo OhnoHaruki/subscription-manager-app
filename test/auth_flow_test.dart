@@ -48,7 +48,7 @@ void main() {
     expect(find.text('パスワード'), findsOneWidget);
 
     // 新規登録ボタンをタップ
-    final signUpButton = find.text('新規登録はこちら');
+    final signUpButton = find.text('アカウントをお持ちでない方はこちら');
     expect(signUpButton, findsOneWidget);
     await tester.tap(signUpButton);
     await tester.pumpAndSettle();
