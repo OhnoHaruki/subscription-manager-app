@@ -21,6 +21,7 @@ class AddSubscriptionScreen extends ConsumerStatefulWidget {
 
 class _AddSubscriptionScreenState extends ConsumerState<AddSubscriptionScreen> {
   final _formKey = GlobalKey<FormState>();
+  bool _isSaving = false;
   
   // 入力項目のためのコントローラー
   late final TextEditingController _nameController;
@@ -60,38 +61,45 @@ class _AddSubscriptionScreenState extends ConsumerState<AddSubscriptionScreen> {
   Future<void> _save() async {
     if (!_formKey.currentState!.validate()) return;
 
-    final repository = ref.read(subscriptionRepositoryProvider);
-    // カンマを除去して数値に変換
-    final amountText = _amountController.text.replaceAll(',', '');
-    final amount = int.parse(amountText);
-    
-    if (widget.subscription == null) {
-      // 新規登録
-      final subscription = Subscription(
-        id: '',
-        name: _nameController.text,
-        amount: amount,
-        cycle: _cycle,
-        nextPaymentDate: _nextPaymentDate,
-        paymentMethod: _selectedPaymentMethodId,
-        tags: _selectedTagIds,
-      );
-      await repository.addSubscription(subscription);
-    } else {
-      // 更新
-      final subscription = widget.subscription!.copyWith(
-        name: _nameController.text,
-        amount: amount,
-        cycle: _cycle,
-        nextPaymentDate: _nextPaymentDate,
-        paymentMethod: _selectedPaymentMethodId,
-        tags: _selectedTagIds,
-      );
-      await repository.updateSubscription(subscription);
-    }
+    setState(() => _isSaving = true);
+    try {
+      final repository = ref.read(subscriptionRepositoryProvider);
+      // カンマを除去して数値に変換
+      final amountText = _amountController.text.replaceAll(',', '');
+      final amount = int.parse(amountText);
+      
+      if (widget.subscription == null) {
+        // 新規登録
+        final subscription = Subscription(
+          id: '',
+          name: _nameController.text,
+          amount: amount,
+          cycle: _cycle,
+          nextPaymentDate: _nextPaymentDate,
+          paymentMethod: _selectedPaymentMethodId,
+          tags: _selectedTagIds,
+        );
+        await repository.addSubscription(subscription);
+      } else {
+        // 更新
+        final subscription = widget.subscription!.copyWith(
+          name: _nameController.text,
+          amount: amount,
+          cycle: _cycle,
+          nextPaymentDate: _nextPaymentDate,
+          paymentMethod: _selectedPaymentMethodId,
+          tags: _selectedTagIds,
+        );
+        await repository.updateSubscription(subscription);
+      }
 
-    if (mounted) {
-      Navigator.of(context).pop();
+      if (mounted) {
+        Navigator.of(context).pop();
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isSaving = false);
+      }
     }
   }
 
@@ -105,19 +113,30 @@ class _AddSubscriptionScreenState extends ConsumerState<AddSubscriptionScreen> {
       appBar: AppBar(
         title: Text(isEditing ? 'サブスク編集' : 'サブスク登録'),
         actions: [
-          IconButton(
-            onPressed: () async {
-              final messenger = ScaffoldMessenger.of(context);
-              try {
-                await _save();
-              } catch (e) {
-                messenger.showSnackBar(
-                  SnackBar(content: Text('保存に失敗しました: $e')),
-                );
-              }
-            },
-            icon: const Icon(Icons.check),
-          ),
+          _isSaving
+              ? const Center(
+                  child: Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 16),
+                    child: SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    ),
+                  ),
+                )
+              : IconButton(
+                  onPressed: () async {
+                    final messenger = ScaffoldMessenger.of(context);
+                    try {
+                      await _save();
+                    } catch (e) {
+                      messenger.showSnackBar(
+                        SnackBar(content: Text('保存に失敗しました: $e')),
+                      );
+                    }
+                  },
+                  icon: const Icon(Icons.check),
+                ),
         ],
       ),
       body: Form(

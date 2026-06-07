@@ -49,7 +49,7 @@ class StatisticsScreen extends ConsumerWidget {
           const SizedBox(height: 24),
 
           const Text('タグ別内訳', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-          const SizedBox(height: 8),
+          const SizedBox(height: 16),
 
           tagsAsync.when(
             data: (tags) {
@@ -64,39 +64,116 @@ class StatisticsScreen extends ConsumerWidget {
               }
 
               return Column(
-                children: sortedEntries.map((entry) {
-                  String tagName;
-                  if (entry.key == 'unclassified') {
-                    tagName = '未分類';
-                  } else {
-                    try {
-                      tagName = tags.firstWhere((t) => t.id == entry.key).name;
-                    } catch (_) {
-                      tagName = '削除済みタグ';
-                    }
-                  }
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // 割合表示バー
+                  if (stats.monthlyTotal > 0)
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 24),
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(8),
+                        child: SizedBox(
+                          height: 24,
+                          child: Row(
+                            children: sortedEntries.map((entry) {
+                              final ratio = entry.value / stats.monthlyTotal;
+                              if (ratio < 0.01) return const SizedBox.shrink();
+                              
+                              // タグごとに色を変える（簡易実装）
+                              final color = Colors.primaries[sortedEntries.indexOf(entry) % Colors.primaries.length];
+                              
+                              return Expanded(
+                                flex: (ratio * 1000).toInt(),
+                                child: Container(color: color),
+                              );
+                            }).toList(),
+                          ),
+                        ),
+                      ),
+                    ),
                   
-                  final percentage = stats.monthlyTotal > 0 
-                      ? (entry.value / stats.monthlyTotal * 100).toStringAsFixed(1)
-                      : '0';
+                  // 詳細リスト
+                  ...sortedEntries.map((entry) {
+                    String tagName;
+                    if (entry.key == 'unclassified') {
+                      tagName = '未分類';
+                    } else {
+                      try {
+                        tagName = tags.firstWhere((t) => t.id == entry.key).name;
+                      } catch (_) {
+                        tagName = '削除済みタグ';
+                      }
+                    }
+                    
+                    final percentage = stats.monthlyTotal > 0 
+                        ? (entry.value / stats.monthlyTotal * 100).toStringAsFixed(1)
+                        : '0';
+                    final color = Colors.primaries[sortedEntries.indexOf(entry) % Colors.primaries.length];
 
-                  return ListTile(
-                    leading: const Icon(Icons.label_outline),
-                    title: Text(tagName),
-                    subtitle: LinearProgressIndicator(
-                      value: stats.monthlyTotal > 0 ? entry.value / stats.monthlyTotal : 0,
-                      backgroundColor: Colors.grey[200],
-                    ),
-                    trailing: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      crossAxisAlignment: CrossAxisAlignment.end,
-                      children: [
-                        Text(currencyFormat.format(entry.value.toInt())),
-                        Text('$percentage%', style: const TextStyle(fontSize: 12, color: Colors.grey)),
-                      ],
-                    ),
-                  );
-                }).toList(),
+                    return Padding(
+                      padding: const EdgeInsets.only(bottom: 12),
+                      child: Row(
+                        children: [
+                          Container(
+                            width: 12,
+                            height: 12,
+                            decoration: BoxDecoration(
+                              color: color,
+                              shape: BoxShape.circle,
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Row(
+                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    Text(tagName, style: const TextStyle(fontWeight: FontWeight.w500)),
+                                    Text(currencyFormat.format(entry.value.toInt()), style: const TextStyle(fontWeight: FontWeight.bold)),
+                                  ],
+                                ),
+                                const SizedBox(height: 4),
+                                Stack(
+                                  children: [
+                                    Container(
+                                      height: 8,
+                                      width: double.infinity,
+                                      decoration: BoxDecoration(
+                                        color: Colors.grey.withAlpha(25),
+                                        borderRadius: BorderRadius.circular(4),
+                                      ),
+                                    ),
+                                    FractionallySizedBox(
+                                      widthFactor: stats.monthlyTotal > 0 ? entry.value / stats.monthlyTotal : 0,
+                                      child: Container(
+                                        height: 8,
+                                        decoration: BoxDecoration(
+                                          color: color.withAlpha(150),
+                                          borderRadius: BorderRadius.circular(4),
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ],
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          SizedBox(
+                            width: 45,
+                            child: Text(
+                              '$percentage%',
+                              style: const TextStyle(fontSize: 12, color: Colors.grey, fontWeight: FontWeight.bold),
+                              textAlign: TextAlign.end,
+                            ),
+                          ),
+                        ],
+                      ),
+                    );
+                  }),
+                ],
               );
             },
             loading: () => const Center(child: CircularProgressIndicator()),

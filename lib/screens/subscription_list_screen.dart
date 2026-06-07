@@ -313,21 +313,48 @@ class _TotalAmountCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final formatter = NumberFormat.simpleCurrency(locale: 'ja_JP');
+    final colorScheme = Theme.of(context).colorScheme;
 
-    return Card(
+    return Container(
+      width: double.infinity,
       margin: const EdgeInsets.all(16),
-      child: Padding(
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          children: [
-            const Text('月額合計（推定）', style: TextStyle(fontSize: 16)),
-            const SizedBox(height: 8),
-            Text(
-              formatter.format(amount.toInt()),
-              style: const TextStyle(fontSize: 32, fontWeight: FontWeight.bold),
-            ),
-          ],
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [colorScheme.primary, colorScheme.primary.withAlpha(200)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
         ),
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: colorScheme.primary.withAlpha(70),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Column(
+        children: [
+          Text(
+            '月額合計（推定）',
+            style: TextStyle(
+              fontSize: 14,
+              color: colorScheme.onPrimary.withAlpha(200),
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            formatter.format(amount.toInt()),
+            style: TextStyle(
+              fontSize: 36,
+              fontWeight: FontWeight.bold,
+              color: colorScheme.onPrimary,
+              letterSpacing: -1,
+            ),
+          ),
+        ],
       ),
     );
   }
