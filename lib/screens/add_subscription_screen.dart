@@ -5,6 +5,7 @@ import 'package:intl/intl.dart';
 import '../models/subscription.dart';
 import '../providers/subscription_provider.dart';
 import '../providers/payment_method_provider.dart';
+import '../providers/tag_provider.dart';
 import 'add_payment_method_screen.dart';
 
 /// サブスクリプション登録・編集画面
@@ -20,6 +21,7 @@ class AddSubscriptionScreen extends ConsumerStatefulWidget {
 
 class _AddSubscriptionScreenState extends ConsumerState<AddSubscriptionScreen> {
   final _formKey = GlobalKey<FormState>();
+  bool _isSaving = false;
   
   // 入力項目のためのコントローラー
   late final TextEditingController _nameController;
@@ -28,6 +30,7 @@ class _AddSubscriptionScreenState extends ConsumerState<AddSubscriptionScreen> {
   late BillingCycle _cycle;
   late DateTime _nextPaymentDate;
   late String _selectedPaymentMethodId;
+  late List<String> _selectedTagIds;
 
   @override
   void initState() {
@@ -44,6 +47,7 @@ class _AddSubscriptionScreenState extends ConsumerState<AddSubscriptionScreen> {
     _cycle = widget.subscription?.cycle ?? BillingCycle.monthly;
     _nextPaymentDate = widget.subscription?.nextPaymentDate ?? DateTime.now();
     _selectedPaymentMethodId = widget.subscription?.paymentMethod ?? '';
+    _selectedTagIds = List.from(widget.subscription?.tags ?? []);
   }
 
   @override
@@ -57,36 +61,45 @@ class _AddSubscriptionScreenState extends ConsumerState<AddSubscriptionScreen> {
   Future<void> _save() async {
     if (!_formKey.currentState!.validate()) return;
 
-    final repository = ref.read(subscriptionRepositoryProvider);
-    // カンマを除去して数値に変換
-    final amountText = _amountController.text.replaceAll(',', '');
-    final amount = int.parse(amountText);
-    
-    if (widget.subscription == null) {
-      // 新規登録
-      final subscription = Subscription(
-        id: '',
-        name: _nameController.text,
-        amount: amount,
-        cycle: _cycle,
-        nextPaymentDate: _nextPaymentDate,
-        paymentMethod: _selectedPaymentMethodId,
-      );
-      await repository.addSubscription(subscription);
-    } else {
-      // 更新
-      final subscription = widget.subscription!.copyWith(
-        name: _nameController.text,
-        amount: amount,
-        cycle: _cycle,
-        nextPaymentDate: _nextPaymentDate,
-        paymentMethod: _selectedPaymentMethodId,
-      );
-      await repository.updateSubscription(subscription);
-    }
+    setState(() => _isSaving = true);
+    try {
+      final repository = ref.read(subscriptionRepositoryProvider);
+      // カンマを除去して数値に変換
+      final amountText = _amountController.text.replaceAll(',', '');
+      final amount = int.parse(amountText);
+      
+      if (widget.subscription == null) {
+        // 新規登録
+        final subscription = Subscription(
+          id: '',
+          name: _nameController.text,
+          amount: amount,
+          cycle: _cycle,
+          nextPaymentDate: _nextPaymentDate,
+          paymentMethod: _selectedPaymentMethodId,
+          tags: _selectedTagIds,
+        );
+        await repository.addSubscription(subscription);
+      } else {
+        // 更新
+        final subscription = widget.subscription!.copyWith(
+          name: _nameController.text,
+          amount: amount,
+          cycle: _cycle,
+          nextPaymentDate: _nextPaymentDate,
+          paymentMethod: _selectedPaymentMethodId,
+          tags: _selectedTagIds,
+        );
+        await repository.updateSubscription(subscription);
+      }
 
-    if (mounted) {
-      Navigator.of(context).pop();
+      if (mounted) {
+        Navigator.of(context).pop();
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isSaving = false);
+      }
     }
   }
 
@@ -100,19 +113,30 @@ class _AddSubscriptionScreenState extends ConsumerState<AddSubscriptionScreen> {
       appBar: AppBar(
         title: Text(isEditing ? 'サブスク編集' : 'サブスク登録'),
         actions: [
-          IconButton(
-            onPressed: () async {
-              final messenger = ScaffoldMessenger.of(context);
-              try {
-                await _save();
-              } catch (e) {
-                messenger.showSnackBar(
-                  SnackBar(content: Text('保存に失敗しました: $e')),
-                );
-              }
-            },
-            icon: const Icon(Icons.check),
-          ),
+          _isSaving
+              ? const Center(
+                  child: Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 16),
+                    child: SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    ),
+                  ),
+                )
+              : IconButton(
+                  onPressed: () async {
+                    final messenger = ScaffoldMessenger.of(context);
+                    try {
+                      await _save();
+                    } catch (e) {
+                      messenger.showSnackBar(
+                        SnackBar(content: Text('保存に失敗しました: $e')),
+                      );
+                    }
+                  },
+                  icon: const Icon(Icons.check),
+                ),
         ],
       ),
       body: Form(
@@ -230,6 +254,39 @@ class _AddSubscriptionScreenState extends ConsumerState<AddSubscriptionScreen> {
               loading: () => const Center(child: LinearProgressIndicator()),
               error: (e, _) => Text('支払い方法の読み込みエラー: $e'),
             ),
+
+            const Divider(),
+            
+            // タグの選択
+            const Padding(
+              padding: EdgeInsets.symmetric(vertical: 8),
+              child: Text('タグ', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+            ),
+            ref.watch(tagsProvider).when(
+              data: (tags) => tags.isEmpty
+                  ? const Text('タグが登録されていません。メニューからタグを追加できます。', style: TextStyle(fontSize: 12, color: Colors.grey))
+                  : Wrap(
+                      spacing: 8,
+                      children: tags.map((tag) {
+                        final isSelected = _selectedTagIds.contains(tag.id);
+                        return FilterChip(
+                          label: Text(tag.name),
+                          selected: isSelected,
+                          onSelected: (selected) {
+                            setState(() {
+                              if (selected) {
+                                _selectedTagIds.add(tag.id);
+                              } else {
+                                _selectedTagIds.remove(tag.id);
+                              }
+                            });
+                          },
+                        );
+                      }).toList(),
+                    ),
+              loading: () => const Center(child: LinearProgressIndicator()),
+              error: (e, _) => Text('タグの読み込みエラー: $e'),
+            ),
           ],
         ),
       ),
@@ -251,8 +308,18 @@ class _CommaTextInputFormatter extends TextInputFormatter {
       );
     }
 
-    // 数字以外を除去
-    final cleanText = newValue.text.replaceAll(',', '');
+    // 全角数字を半角数字に変換
+    String text = newValue.text;
+    final fullWidthMap = {
+      '０': '0', '１': '1', '２': '2', '３': '3', '４': '4',
+      '５': '5', '６': '6', '７': '7', '８': '8', '９': '9',
+    };
+    fullWidthMap.forEach((full, half) {
+      text = text.replaceAll(full, half);
+    });
+
+    // 数字以外（カンマ等）を除去
+    final cleanText = text.replaceAll(RegExp(r'[^0-9]'), '');
     final intValue = int.tryParse(cleanText);
     if (intValue == null) return oldValue;
 
@@ -260,16 +327,19 @@ class _CommaTextInputFormatter extends TextInputFormatter {
     final newText = NumberFormat('#,###').format(intValue);
 
     // カーソル位置の再計算
+    // 新しいテキスト内での数字の出現回数に基づいてカーソル位置を調整する
     int selectionIndex = newValue.selection.end;
     if (selectionIndex < 0) selectionIndex = 0;
 
+    // 元の入力文字列（全角変換後）において、カーソルより前にあった「数字」の数を数える
     int digitsBeforeCursor = 0;
-    for (int i = 0; i < selectionIndex; i++) {
-      if (i < newValue.text.length && RegExp(r'[0-9]').hasMatch(newValue.text[i])) {
+    for (int i = 0; i < selectionIndex && i < text.length; i++) {
+      if (RegExp(r'[0-9]').hasMatch(text[i])) {
         digitsBeforeCursor++;
       }
     }
 
+    // 新しいカンマ区切り文字列の中で、同じ数だけの「数字」が現れる位置を特定する
     int newSelectionIndex = 0;
     int digitsFound = 0;
     while (digitsFound < digitsBeforeCursor && newSelectionIndex < newText.length) {

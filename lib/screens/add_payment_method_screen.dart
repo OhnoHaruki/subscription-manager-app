@@ -16,6 +16,7 @@ class AddPaymentMethodScreen extends ConsumerStatefulWidget {
 
 class _AddPaymentMethodScreenState extends ConsumerState<AddPaymentMethodScreen> {
   final _formKey = GlobalKey<FormState>();
+  bool _isSaving = false;
   
   late final TextEditingController _nameController;
   late final TextEditingController _last4Controller;
@@ -42,29 +43,36 @@ class _AddPaymentMethodScreenState extends ConsumerState<AddPaymentMethodScreen>
   Future<void> _save() async {
     if (!_formKey.currentState!.validate()) return;
 
-    final repository = ref.read(paymentMethodRepositoryProvider);
+    setState(() => _isSaving = true);
+    try {
+      final repository = ref.read(paymentMethodRepositoryProvider);
 
-    if (widget.paymentMethod == null) {
-      final method = PaymentMethod(
-        id: '',
-        name: _nameController.text,
-        type: _type,
-        last4: _last4Controller.text,
-        expiryDate: _expiryDate,
-      );
-      await repository.addPaymentMethod(method);
-    } else {
-      final method = widget.paymentMethod!.copyWith(
-        name: _nameController.text,
-        type: _type,
-        last4: _last4Controller.text,
-        expiryDate: _expiryDate,
-      );
-      await repository.updatePaymentMethod(method);
-    }
+      if (widget.paymentMethod == null) {
+        final method = PaymentMethod(
+          id: '',
+          name: _nameController.text,
+          type: _type,
+          last4: _last4Controller.text,
+          expiryDate: _expiryDate,
+        );
+        await repository.addPaymentMethod(method);
+      } else {
+        final method = widget.paymentMethod!.copyWith(
+          name: _nameController.text,
+          type: _type,
+          last4: _last4Controller.text,
+          expiryDate: _expiryDate,
+        );
+        await repository.updatePaymentMethod(method);
+      }
 
-    if (mounted) {
-      Navigator.pop(context);
+      if (mounted) {
+        Navigator.pop(context);
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isSaving = false);
+      }
     }
   }
 
@@ -76,19 +84,30 @@ class _AddPaymentMethodScreenState extends ConsumerState<AddPaymentMethodScreen>
       appBar: AppBar(
         title: Text(isEditing ? '支払い方法編集' : '支払い方法登録'),
         actions: [
-          IconButton(
-            onPressed: () async {
-              final messenger = ScaffoldMessenger.of(context);
-              try {
-                await _save();
-              } catch (e) {
-                messenger.showSnackBar(
-                  SnackBar(content: Text('保存に失敗しました: $e')),
-                );
-              }
-            },
-            icon: const Icon(Icons.check),
-          ),
+          _isSaving
+              ? const Center(
+                  child: Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 16),
+                    child: SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    ),
+                  ),
+                )
+              : IconButton(
+                  onPressed: () async {
+                    final messenger = ScaffoldMessenger.of(context);
+                    try {
+                      await _save();
+                    } catch (e) {
+                      messenger.showSnackBar(
+                        SnackBar(content: Text('保存に失敗しました: $e')),
+                      );
+                    }
+                  },
+                  icon: const Icon(Icons.check),
+                ),
         ],
       ),
       body: Form(

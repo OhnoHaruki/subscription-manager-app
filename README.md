@@ -92,65 +92,65 @@ MVPでは、次のような画面を想定しています。
 
 その後、通知機能やGmail連携などを追加し、支払い失敗の予防や解約手続きの効率化につなげていきます。
 
-## セットアップ
+---
 
-### 前提条件
+## 👨‍💻 Developer Zone
 
-| ツール | 用途 | インストール方法 |
-| --- | --- | --- |
-| [asdf](https://asdf-vm.com/) | Flutter バージョン管理 | 公式ドキュメント参照 |
-| [Supabase CLI](https://supabase.com/docs/guides/cli) | バックエンド管理 | `brew install supabase/tap/supabase` (macOSの場合) |
+開発環境のセットアップや実機テストの手順を記載します。
 
-### 手順
+### 1. プロジェクトの初期セットアップ
 
-#### 1. Flutter のセットアップ
+1. **リポジトリのクローン**:
+   ```bash
+   git clone <repository-url>
+   cd subscription-manager-app
+   ```
+2. **Flutter環境の確認**:
+   プロジェクトルートにある `.tool-versions` ファイルの Flutter バージョンを使用してください。
+   ```bash
+   asdf install
+   ```
+3. **依存パッケージのインストール**:
+   ```bash
+   flutter pub get
+   ```
+4. **環境変数の設定**:
+   `.env.example` を参考に `.env` ファイルを作成し、Supabase の URL と Anon Key を設定してください。
+   ```bash
+   cp .env.example .env  # 存在する場合
+   # .env を編集して SUPABASE_URL と SUPABASE_ANON_KEY を設定
+   ```
 
-```bash
-# asdf プラグインを追加（.tool-versions で flutter / nodejs 両方を管理）
-asdf plugin add flutter
+### 2. iPhone での動作確認
 
-# .tool-versions のバージョンを一括インストール
-asdf install
+実機（iPhone）でデバッグを行う手順です。
 
-# 依存パッケージのインストール
-flutter pub get
-```
+1. **プロジェクトを開く**:
+   ```bash
+   open ios/Runner.xcworkspace
+   ```
+2. **署名の設定**:
+   Xcode で `Runner` プロジェクトを選択し、`Signing & Capabilities` タブで自身の Apple ID を追加し、適切な Team を選択してください。
+3. **デバイスの接続と実行**:
+   iPhone を Mac に接続し、Xcode のデバイスセレクタから接続した iPhone を選択。
+4. **ビルドと実行**:
+   Xcode の実行ボタンを押すか、ターミナルで以下を実行します。
+   ```bash
+   flutter run
+   ```
 
-#### 2. Supabase のセットアップ
+### 3. CI/CD とテスト
 
-[Supabase Console](https://supabase.com/) でプロジェクトを作成し、URLとAnonキーを取得します。
+- **テストの実行**:
+  ```bash
+  flutter test
+  ```
+- **コード解析**:
+  ```bash
+  flutter analyze
+  ```
 
-`lib/main.dart` の `Supabase.initialize` に取得した値を設定してください。
-
-```dart
-// lib/main.dart
-await Supabase.initialize(
-  url: 'YOUR_SUPABASE_URL',
-  anonKey: 'YOUR_SUPABASE_ANON_KEY',
-);
-```
-
-#### 3. データベース・RLSの設定
-
-プロジェクトのルートディレクトリで以下のコマンドを実行し、データベースのマイグレーションを適用します。
-
-```bash
-# ローカル開発の場合（Dockerが必要）
-supabase start
-
-# リモートプロジェクトに適用する場合
-# supabase login
-# supabase link --project-ref <project-id>
-# supabase db push
-```
-
-※ 手動で設定する場合は `supabase/migrations` 内のSQLファイルを順に適用してください。
-
-#### 4. アプリの起動
-
-```bash
-flutter run
-```
+---
 
 ## ライセンス
 

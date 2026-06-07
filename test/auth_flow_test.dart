@@ -1,11 +1,13 @@
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:subscription_manager/main.dart';
 import 'package:subscription_manager/providers/subscription_provider.dart';
-
 import 'package:subscription_manager/providers/payment_method_provider.dart';
+import 'package:subscription_manager/providers/profile_provider.dart';
+import 'package:subscription_manager/models/profile.dart';
 
 class MockSupabaseClient extends Mock implements SupabaseClient {}
 class MockGoTrueClient extends Mock implements GoTrueClient {}
@@ -31,6 +33,7 @@ void main() {
           supabaseProvider.overrideWithValue(mockSupabase),
           subscriptionsProvider.overrideWith((ref) => const Stream.empty()),
           paymentMethodsProvider.overrideWith((ref) => const Stream.empty()),
+          profileProvider.overrideWith((ref) => Future.value(null)),
         ],
         child: const MyApp(),
       ),
@@ -45,7 +48,7 @@ void main() {
     expect(find.text('パスワード'), findsOneWidget);
 
     // 新規登録ボタンをタップ
-    final signUpButton = find.text('新規登録はこちら');
+    final signUpButton = find.text('アカウントをお持ちでない方はこちら');
     expect(signUpButton, findsOneWidget);
     await tester.tap(signUpButton);
     await tester.pumpAndSettle();
@@ -55,13 +58,14 @@ void main() {
     expect(find.text('登録'), findsOneWidget);
   });
 
-  testWidgets('セッションがある場合、サブスク一覧画面が表示される', (WidgetTester tester) async {
+  testWidgets('セッションがある場合、サブスク一覧画面が表示され、プロフィール画面へ遷移できる', (WidgetTester tester) async {
     final mockUser = User(
       id: 'user_id',
       appMetadata: {},
       userMetadata: {},
       aud: 'aud',
       createdAt: DateTime.now().toIso8601String(),
+      email: 'test@example.com',
     );
     final mockSession = Session(
       accessToken: 'token',
@@ -80,6 +84,11 @@ void main() {
           supabaseProvider.overrideWithValue(mockSupabase),
           subscriptionsProvider.overrideWith((ref) => Stream.value([])),
           paymentMethodsProvider.overrideWith((ref) => Stream.value([])),
+          profileProvider.overrideWith((ref) => Future.value(Profile(
+                id: 'user_id',
+                username: 'Test User',
+                createdAt: DateTime.now(),
+              ))),
         ],
         child: const MyApp(),
       ),
@@ -90,5 +99,19 @@ void main() {
     // サブスク管理（一覧画面）が表示されていることを確認
     expect(find.text('サブスク管理'), findsOneWidget);
     expect(find.text('サブスクリプションが登録されていません'), findsOneWidget);
+
+    // プロフィール画面へ遷移
+    await tester.tap(find.byIcon(Icons.person_outline));
+    await tester.pumpAndSettle();
+
+    expect(find.text('プロフィール'), findsAtLeastNWidgets(1));
+    expect(find.text('Test User'), findsOneWidget);
+    expect(find.text('test@example.com'), findsOneWidget);
+
+    // プライバシーポリシーへ遷移
+    await tester.tap(find.text('プライバシーポリシー'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('プライバシーポリシー'), findsAtLeastNWidgets(1));
   });
 }

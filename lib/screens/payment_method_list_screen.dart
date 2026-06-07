@@ -23,14 +23,45 @@ class PaymentMethodListScreen extends ConsumerWidget {
                 itemCount: methods.length,
                 itemBuilder: (context, index) {
                   final method = methods[index];
+                  final expiringMethods = ref.watch(expiringPaymentMethodsProvider);
+                  final isExpiring = expiringMethods.any((m) => m.id == method.id);
+                  final isExpired = method.expiryDate != null && method.expiryDate!.isBefore(DateTime.now());
+
                   return ListTile(
                     leading: Icon(
                       method.type == PaymentMethodType.creditCard
                           ? Icons.credit_card
                           : Icons.account_balance,
+                      color: isExpiring ? Colors.orange : null,
                     ),
-                    title: Text(method.name),
-                    subtitle: method.last4.isNotEmpty ? Text('末尾: ${method.last4}') : null,
+                    title: Row(
+                      children: [
+                        Text(method.name),
+                        if (isExpiring) ...[
+                          const SizedBox(width: 8),
+                          Icon(
+                            Icons.warning_amber_rounded,
+                            size: 16,
+                            color: isExpired ? Colors.red : Colors.orange,
+                          ),
+                        ],
+                      ],
+                    ),
+                    subtitle: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        if (method.last4.isNotEmpty) Text('末尾: ${method.last4}'),
+                        if (isExpiring)
+                          Text(
+                            isExpired ? '有効期限が切れています' : '有効期限が近づいています',
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: isExpired ? Colors.red : Colors.orange,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                      ],
+                    ),
                     onTap: () {
                       Navigator.of(context).push(
                         MaterialPageRoute(
