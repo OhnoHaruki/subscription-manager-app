@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../providers/tag_provider.dart';
+import '../models/tag.dart';
 
 class TagListScreen extends ConsumerWidget {
   const TagListScreen({super.key});
@@ -23,9 +24,18 @@ class TagListScreen extends ConsumerWidget {
                   return ListTile(
                     leading: const Icon(Icons.label),
                     title: Text(tag.name),
-                    trailing: IconButton(
-                      icon: const Icon(Icons.delete, color: Colors.red),
-                      onPressed: () => _deleteTag(context, ref, tag),
+                    trailing: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        IconButton(
+                          icon: const Icon(Icons.edit_outlined),
+                          onPressed: () => _editTag(context, ref, tag),
+                        ),
+                        IconButton(
+                          icon: const Icon(Icons.delete_outline, color: Colors.red),
+                          onPressed: () => _deleteTag(context, ref, tag),
+                        ),
+                      ],
                     ),
                   );
                 },
@@ -69,7 +79,36 @@ class TagListScreen extends ConsumerWidget {
     }
   }
 
-  Future<void> _deleteTag(BuildContext context, WidgetRef ref, dynamic tag) async {
+  Future<void> _editTag(BuildContext context, WidgetRef ref, Tag tag) async {
+    final controller = TextEditingController(text: tag.name);
+    final name = await showDialog<String>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('タグの編集'),
+        content: TextField(
+          controller: controller,
+          decoration: const InputDecoration(labelText: 'タグ名'),
+          autofocus: true,
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('キャンセル'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, controller.text),
+            child: const Text('保存'),
+          ),
+        ],
+      ),
+    );
+
+    if (name != null && name.trim().isNotEmpty && name.trim() != tag.name) {
+      await ref.read(tagRepositoryProvider).updateTag(tag.id, name.trim());
+    }
+  }
+
+  Future<void> _deleteTag(BuildContext context, WidgetRef ref, Tag tag) async {
     final confirm = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(

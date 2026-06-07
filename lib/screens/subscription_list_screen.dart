@@ -185,9 +185,23 @@ class _SubscriptionListScreenState extends ConsumerState<SubscriptionListScreen>
                     child: ListView.builder(
                       scrollDirection: Axis.horizontal,
                       padding: const EdgeInsets.symmetric(horizontal: 16),
-                      itemCount: tags.length,
+                      itemCount: tags.length + (selectedTagIds.isNotEmpty ? 1 : 0),
                       itemBuilder: (context, index) {
-                        final tag = tags[index];
+                        if (selectedTagIds.isNotEmpty && index == 0) {
+                          return Padding(
+                            padding: const EdgeInsets.only(right: 8),
+                            child: ActionChip(
+                              label: const Text('リセット', style: TextStyle(fontSize: 12)),
+                              avatar: const Icon(Icons.close, size: 14),
+                              onPressed: () {
+                                ref.read(selectedFilterTagIdsProvider.notifier).clear();
+                              },
+                            ),
+                          );
+                        }
+                        
+                        final tagIndex = selectedTagIds.isNotEmpty ? index - 1 : index;
+                        final tag = tags[tagIndex];
                         final isSelected = selectedTagIds.contains(tag.id);
                         return Padding(
                           padding: const EdgeInsets.only(right: 8),
