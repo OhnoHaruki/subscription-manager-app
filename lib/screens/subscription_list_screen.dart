@@ -382,7 +382,8 @@ class _SubscriptionTile extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final dateFormatter = DateFormat('yyyy/MM/dd');
+    final dateFormatter = DateFormat('MM/dd');
+    final formatter = NumberFormat.simpleCurrency(locale: 'ja_JP');
 
     // 支払い方法の名称を取得
     final paymentMethods = ref.watch(paymentMethodsProvider).value ?? [];
@@ -393,111 +394,98 @@ class _SubscriptionTile extends ConsumerWidget {
     final expiringMethods = ref.watch(expiringPaymentMethodsProvider);
     final isMethodExpiring = paymentMethod != null && expiringMethods.any((m) => m.id == paymentMethod.id);
 
-    // タグ名を取得
-    final allTags = ref.watch(tagsProvider).value ?? [];
-    final subscriptionTags = allTags.where((t) => subscription.tags.contains(t.id)).toList();
+    // 次回支払日までの残り日数計算
+    final now = DateTime.now();
+    final daysUntil = subscription.nextPaymentDate.difference(DateTime(now.year, now.month, now.day)).inDays;
 
-    return ListTile(
-      leading: CircleAvatar(
-        child: Text(subscription.name.characters.first.toUpperCase()),
+    // デザイン参考: Rocket Money, Bobby (Bento grid components & prominence of 'days remaining')
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      decoration: BoxDecoration(
+        color: Theme.of(context).cardTheme.color,
+        borderRadius: BorderRadius.circular(16),
+        border: Theme.of(context).cardTheme.shape is RoundedRectangleBorder
+            ? (Theme.of(context).cardTheme.shape as RoundedRectangleBorder).side
+            : null,
       ),
-      title: Row(
-        children: [
-          Text(subscription.name),
-          if (isMethodExpiring) ...[
-            const SizedBox(width: 8),
-            const Icon(Icons.warning_amber_rounded, size: 16, color: Colors.orange),
+      child: ListTile(
+        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        leading: CircleAvatar(
+          backgroundColor: Theme.of(context).colorScheme.primaryContainer,
+          child: Text(
+            subscription.name.characters.first.toUpperCase(),
+            style: TextStyle(color: Theme.of(context).colorScheme.onPrimaryContainer, fontWeight: FontWeight.bold),
+          ),
+        ),
+        title: Row(
+          children: [
+            Expanded(child: Text(subscription.name, style: const TextStyle(fontWeight: FontWeight.bold))),
+            if (isMethodExpiring)
+              const Icon(Icons.warning_amber_rounded, size: 18, color: Colors.orange),
           ],
-        ],
-      ),
-      subtitle: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text('次回支払日: ${dateFormatter.format(subscription.nextPaymentDate)}'),
-          Text('支払い方法: $paymentMethodName', style: const TextStyle(fontSize: 12, color: Colors.grey)),
-          if (subscriptionTags.isNotEmpty)
-            Padding(
-              padding: const EdgeInsets.only(top: 4),
-              child: Wrap(
-                spacing: 4,
-                children: subscriptionTags.map((tag) {
-                  return Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                    decoration: BoxDecoration(
-                      color: Colors.deepPurple.withAlpha(25),
-                      borderRadius: BorderRadius.circular(4),
-                    ),
-                    child: Text(
-                      tag.name,
-                      style: const TextStyle(fontSize: 10, color: Colors.deepPurple),
-                    ),
-                  );
-                }).toList(),
-              ),
-            ),
-        ],
-      ),
-      trailing: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          IconButton(
-            icon: const Icon(Icons.check_circle_outline, color: Colors.green),
-            onPressed: () async {
-              await ref.read(subscriptionRepositoryProvider).markAsPaid(
-                subscription.id,
-                subscription.nextPaymentDate,
-                subscription.amount,
-              );
-              if (context.mounted) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('支払いを記録しました')),
-                );
-              }
-            },
-          ),
-          IconButton(
-            icon: const Icon(Icons.history),
-            onPressed: () {
-              Navigator.of(context).push(
-                MaterialPageRoute(
-                  builder: (context) => SubscriptionHistoryScreen(subscriptionId: subscription.id),
+        ),
+        subtitle: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const SizedBox(height: 4),
+            Row(
+              children: [
+                _CountdownBadge(daysUntil: daysUntil),
+                const SizedBox(width: 8),
+                Text(
+                  '次回: ${dateFormatter.format(subscription.nextPaymentDate)}',
+                  style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
                 ),
-              );
-            },
-          ),
-        ],
+              ],
+            ),
+          ],
+        ),
+        trailing: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.end,
+          children: [
+            Text(
+              formatter.format(subscription.amount),
+              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+            ),
+            Text(
+              subscription.cycle == BillingCycle.monthly ? '月額' : '年額',
+              style: TextStyle(fontSize: 10, color: Colors.grey.shade500),
+            ),
+          ],
+        ),
+        onTap: () {
+          Navigator.of(context).push(
+            MaterialPageRoute(
+              builder: (context) => AddSubscriptionScreen(subscription: subscription),
+            ),
+          );
+        },
       ),
-      onTap: () {
-        // 編集画面へ遷移
-        Navigator.of(context).push(
-          MaterialPageRoute(
-            builder: (context) => AddSubscriptionScreen(subscription: subscription),
-          ),
-        );
-      },
-      onLongPress: () {
-        // 長押しで削除確認ダイアログ（簡易実装）
-        showDialog(
-          context: context,
-          builder: (context) => AlertDialog(
-            title: const Text('削除の確認'),
-            content: Text('${subscription.name} を削除しますか？'),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(context),
-                child: const Text('キャンセル'),
-              ),
-              TextButton(
-                onPressed: () {
-                  ref.read(subscriptionRepositoryProvider).deleteSubscription(subscription.id);
-                  Navigator.pop(context);
-                },
-                child: const Text('削除', style: TextStyle(color: Colors.red)),
-              ),
-            ],
-          ),
-        );
-      },
+    );
+  }
+}
+
+/// 次回支払日までのカウントダウンバッジ
+class _CountdownBadge extends StatelessWidget {
+  const _CountdownBadge({required this.daysUntil});
+
+  final int daysUntil;
+
+  @override
+  Widget build(BuildContext context) {
+    final color = daysUntil < 3 ? Colors.red : (daysUntil < 7 ? Colors.orange : Colors.green);
+    
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+      decoration: BoxDecoration(
+        color: color.withAlpha(25),
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Text(
+        daysUntil < 0 ? '期限切れ' : (daysUntil == 0 ? '本日' : '$daysUntil日後'),
+        style: TextStyle(fontSize: 10, color: color, fontWeight: FontWeight.bold),
+      ),
     );
   }
 }
