@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
+import 'package:subscription_manager/services/widget_service.dart';
 import '../models/subscription.dart';
 import '../providers/subscription_provider.dart';
 import '../providers/payment_method_provider.dart';
@@ -78,6 +79,18 @@ class _SubscriptionListScreenState extends ConsumerState<SubscriptionListScreen>
     // タグ一覧を取得
     final tagsAsync = ref.watch(tagsProvider);
     final selectedTagIds = ref.watch(selectedFilterTagIdsProvider);
+
+    // ウィジェットへのデータ同期
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (subscriptionsAsync.value != null && subscriptionsAsync.value!.isNotEmpty) {
+        final nextSubscription = subscriptionsAsync.value!.first;
+        WidgetService.updateWidgetData(
+          totalAmount: totalAmount,
+          nextPaymentName: nextSubscription.name,
+          nextPaymentDate: DateFormat('MM/dd').format(nextSubscription.nextPaymentDate),
+        );
+      }
+    });
 
     return Scaffold(
       appBar: AppBar(

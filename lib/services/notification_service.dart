@@ -3,7 +3,10 @@ import 'package:timezone/timezone.dart' as tz;
 import '../models/subscription.dart';
 
 class NotificationService {
-  final FlutterLocalNotificationsPlugin _notificationsPlugin = FlutterLocalNotificationsPlugin();
+  final FlutterLocalNotificationsPlugin _notificationsPlugin;
+
+  NotificationService({FlutterLocalNotificationsPlugin? plugin})
+      : _notificationsPlugin = plugin ?? FlutterLocalNotificationsPlugin();
 
   /// サブスクの支払い通知をスケジュールする
   Future<void> scheduleSubscriptionNotification(Subscription subscription) async {
