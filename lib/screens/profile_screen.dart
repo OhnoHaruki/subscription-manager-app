@@ -4,6 +4,8 @@ import '../providers/auth_provider.dart';
 import '../providers/profile_provider.dart';
 import '../providers/theme_provider.dart';
 import 'privacy_policy_screen.dart';
+import 'terms_of_service_screen.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class ProfileScreen extends ConsumerStatefulWidget {
   const ProfileScreen({super.key});
@@ -179,6 +181,20 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
               
               ListTile(
                 leading: const Icon(Icons.description),
+                title: const Text('利用規約'),
+                trailing: const Icon(Icons.chevron_right),
+                onTap: () {
+                  Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (context) => const TermsOfServiceScreen(),
+                    ),
+                  );
+                },
+              ),
+              const Divider(),
+              
+              ListTile(
+                leading: const Icon(Icons.description),
                 title: const Text('プライバシーポリシー'),
                 trailing: const Icon(Icons.chevron_right),
                 onTap: () {
@@ -187,6 +203,34 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                       builder: (context) => const PrivacyPolicyScreen(),
                     ),
                   );
+                },
+              ),
+              const Divider(),
+
+              ListTile(
+                leading: const Icon(Icons.mail),
+                title: const Text('お問い合わせ'),
+                trailing: const Icon(Icons.chevron_right),
+                onTap: () async {
+                  // TODO: 実際のサポート用メールアドレスに置き換えてください
+                  final Uri emailLaunchUri = Uri(
+                    scheme: 'mailto',
+                    path: 'support@example.com',
+                    queryParameters: {
+                      'subject': 'Subscription Manager お問い合わせ',
+                    },
+                  );
+                  try {
+                    if (await canLaunchUrl(emailLaunchUri)) {
+                      await launchUrl(emailLaunchUri);
+                    }
+                  } catch (e) {
+                    if (mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('メールアプリを開けませんでした')),
+                      );
+                    }
+                  }
                 },
               ),
               const Divider(),

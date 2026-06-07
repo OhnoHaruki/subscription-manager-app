@@ -1,12 +1,49 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../models/subscription.dart';
 
+/// サブスクリプションデータの取得・保存を管理するリポジトリクラス
 class SubscriptionRepository {
-  final SupabaseClient _client;
-
   SubscriptionRepository(this._client);
 
-  PostgrestQueryBuilder get _table => _client.from('subscriptions');
+  final SupabaseClient _client;
+
+  /// Supabaseのテーブル参照
+  SupabaseQueryBuilder get _table => _client.from('subscriptions');
+
+  /// サブスクリプション一覧をリアルタイムで取得する
+  Stream<List<Subscription>> watchSubscriptions() {
+    final userId = _client.auth.currentUser?.id;
+    if (userId == null) return Stream.value([]);
+
+    // サブスクリプション本体のストリーム
+    return _table
+        .stream(primaryKey: ['id'])
+        .eq('user_id', userId)
+        .asyncMap((maps) async {
+          final subscriptions = <Subscription>[];
+          
+          for (final map in maps) {
+            final data = Map<String, dynamic>.from(map);
+            data['id'] = map['id'];
+            data['nextPaymentDate'] = data['next_payment_date'];
+            data.remove('next_payment_date');
+
+            // 紐付いているタグのIDを取得
+            final tagResponse = await _client
+                .from('subscription_tags')
+                .select('tag_id')
+                .eq('subscription_id', map['id']);
+            
+            final tagIds = (tagResponse as List)
+                .map((item) => item['tag_id'] as String)
+                .toList();
+            
+            data['tags'] = tagIds;
+            subscriptions.add(Subscription.fromJson(data));
+          }
+          return subscriptions;
+        });
+  }
 
   /// 全てのサブスクリプションを取得
   Future<List<Subscription>> getAllSubscriptions() async {
@@ -14,28 +51,22 @@ class SubscriptionRepository {
     return (response as List).map((data) => Subscription.fromJson(data)).toList();
   }
 
-  /// リアルタイムでサブスクリプション一覧を監視
-  Stream<List<Subscription>> watchSubscriptions() {
-    return _client
-        .from('subscriptions')
-        .stream(primaryKey: ['id'])
-        .order('created_at')
-        .map((data) => data.map((json) => Subscription.fromJson(json)).toList());
-  }
-
-  /// サブスクリプションを追加
+  /// 新規サブスクリプションを追加する
   Future<void> addSubscription(Subscription subscription) async {
     final user = _client.auth.currentUser;
-    if (user == null) throw Exception('User not logged in');
+    if (user == null) throw Exception('ログインが必要です');
 
-    final supabaseJson = {
-      ...subscription.toJson(),
+    final json = subscription.toJson();
+    
+    // Supabaseのテーブル定義に合わせたJSONを構築
+    final Map<String, dynamic> supabaseJson = {
       'user_id': user.id,
+      'name': json['name'],
+      'amount': json['amount'],
+      'cycle': json['cycle'],
+      'next_payment_date': json['nextPaymentDate'],
+      'payment_method_id': json['paymentMethod']?.isEmpty ?? true ? null : json['paymentMethod'],
     };
-    // idは自動生成されるため除外
-    supabaseJson.remove('id');
-    // tagsは別テーブルで管理するため除外
-    supabaseJson.remove('tags');
 
     try {
       // サブスクリプションの挿入
@@ -55,43 +86,64 @@ class SubscriptionRepository {
     }
   }
 
-  /// サブスクリプションを更新
+  /// サブスクリプション情報を更新する
   Future<void> updateSubscription(Subscription subscription) async {
-    final user = _client.auth.currentUser;
-    if (user == null) throw Exception('User not logged in');
-
-    final supabaseJson = {
-      ...subscription.toJson(),
-      'user_id': user.id,
+    final json = subscription.toJson();
+    final id = json['id'];
+    
+    // Supabaseのテーブル定義に合わせたJSONを構築
+    final Map<String, dynamic> supabaseJson = {
+      'name': json['name'],
+      'amount': json['amount'],
+      'cycle': json['cycle'],
+      'next_payment_date': json['nextPaymentDate'],
+      'payment_method_id': json['paymentMethod']?.isEmpty ?? true ? null : json['paymentMethod'],
     };
-    // tagsは別テーブルで管理するため除外
-    supabaseJson.remove('tags');
 
-    try {
-      await _table.update(supabaseJson).eq('id', subscription.id);
+    // サブスクリプション本体の更新
+    await _table.update(supabaseJson).eq('id', id);
 
-      // タグの更新（一度削除して再登録）
-      await _client.from('subscription_tags').delete().eq('subscription_id', subscription.id);
-      if (subscription.tags.isNotEmpty) {
-        final List<Map<String, dynamic>> tagInserts = subscription.tags.map((tagId) => {
-          'subscription_id': subscription.id,
-          'tag_id': tagId,
-        }).toList();
-        await _client.from('subscription_tags').insert(tagInserts);
-      }
-    } catch (e) {
-      rethrow;
+    // タグの紐付け更新（一度全て削除して再登録）
+    await _client.from('subscription_tags').delete().eq('subscription_id', id);
+    if (subscription.tags.isNotEmpty) {
+      final List<Map<String, dynamic>> tagInserts = subscription.tags.map((tagId) => {
+        'subscription_id': id,
+        'tag_id': tagId,
+      }).toList();
+      await _client.from('subscription_tags').insert(tagInserts);
     }
   }
 
-  /// サブスクリプションを削除
-  Future<void> deleteSubscription(String id) async {
-    try {
-      // 外部キー制約により、subscription_tagsも削除される（CASCADE想定）
-      // もしCASCADEでない場合は、明示的に削除する必要がある
-      await _table.delete().eq('id', id);
-    } catch (e) {
-      rethrow;
+  /// 支払い完了を記録し、次回支払日を更新する
+  Future<void> markAsPaid(String subscriptionId, DateTime currentNextPaymentDate, int amount) async {
+    final user = _client.auth.currentUser;
+    if (user == null) throw Exception('ログインが必要です');
+
+    // 次回支払日を計算（月額なら1ヶ月後、年額なら1年後）
+    final subscription = await _table.select().eq('id', subscriptionId).single();
+    final cycle = subscription['cycle'] == 'monthly' ? 'monthly' : 'yearly';
+    
+    DateTime nextPaymentDate = currentNextPaymentDate;
+    if (cycle == 'monthly') {
+      nextPaymentDate = DateTime(nextPaymentDate.year, nextPaymentDate.month + 1, nextPaymentDate.day);
+    } else {
+      nextPaymentDate = DateTime(nextPaymentDate.year + 1, nextPaymentDate.month, nextPaymentDate.day);
     }
+
+    // トランザクション的に処理
+    await _client.from('payment_histories').insert({
+      'subscription_id': subscriptionId,
+      'paid_date': DateTime.now().toIso8601String(),
+      'amount': amount,
+    });
+
+    await _table.update({
+      'next_payment_date': nextPaymentDate.toIso8601String(),
+    }).eq('id', subscriptionId);
+  }
+
+  /// サブスクリプションを削除する
+  Future<void> deleteSubscription(String id) async {
+    await _table.delete().eq('id', id);
   }
 }

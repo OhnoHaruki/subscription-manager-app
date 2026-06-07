@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../providers/auth_provider.dart';
 import 'privacy_policy_screen.dart';
+import 'terms_of_service_screen.dart';
 
 class SignUpScreen extends ConsumerStatefulWidget {
   const SignUpScreen({super.key});
@@ -113,19 +114,44 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
                       child: const Text('登録'),
                     ),
               const SizedBox(height: 16),
-              TextButton(
-                onPressed: () {
-                  Navigator.of(context).push(
-                    MaterialPageRoute(
-                      builder: (context) => const PrivacyPolicyScreen(),
+              Wrap(
+                alignment: WrapAlignment.center,
+                crossAxisAlignment: WrapCrossAlignment.center,
+                children: [
+                  const Text('登録することで', style: TextStyle(fontSize: 12)),
+                  TextButton(
+                    onPressed: () {
+                      Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (context) => const TermsOfServiceScreen(),
+                        ),
+                      );
+                    },
+                    style: TextButton.styleFrom(
+                      padding: EdgeInsets.zero,
+                      minimumSize: const Size(0, 0),
+                      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                     ),
-                  );
-                },
-                child: const Text(
-                  '登録することでプライバシーポリシーに同意したことになります',
-                  style: TextStyle(fontSize: 12),
-                  textAlign: TextAlign.center,
-                ),
+                    child: const Text('利用規約', style: TextStyle(fontSize: 12, decoration: TextDecoration.underline)),
+                  ),
+                  const Text('と', style: TextStyle(fontSize: 12)),
+                  TextButton(
+                    onPressed: () {
+                      Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (context) => const PrivacyPolicyScreen(),
+                        ),
+                      );
+                    },
+                    style: TextButton.styleFrom(
+                      padding: EdgeInsets.zero,
+                      minimumSize: const Size(0, 0),
+                      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                    ),
+                    child: const Text('プライバシーポリシー', style: TextStyle(fontSize: 12, decoration: TextDecoration.underline)),
+                  ),
+                  const Text('に同意したことになります', style: TextStyle(fontSize: 12)),
+                ],
               ),
             ],
           ),
