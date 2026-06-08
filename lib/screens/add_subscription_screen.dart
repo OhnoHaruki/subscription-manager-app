@@ -27,6 +27,7 @@ class _AddSubscriptionScreenState extends ConsumerState<AddSubscriptionScreen> {
   late final TextEditingController _nameController;
   late final TextEditingController _amountController;
   
+  bool _isRecurring = true;
   late BillingCycle _cycle;
   late DateTime _nextPaymentDate;
   late String _selectedPaymentMethodId;
@@ -37,6 +38,7 @@ class _AddSubscriptionScreenState extends ConsumerState<AddSubscriptionScreen> {
     super.initState();
     // 編集モードの場合は初期値をセット、新規の場合はデフォルト値をセット
     _nameController = TextEditingController(text: widget.subscription?.name);
+    _isRecurring = widget.subscription?.isRecurring ?? true;
     
     // 金額をカンマ区切りで初期化
     final amountText = widget.subscription != null 
@@ -78,6 +80,7 @@ class _AddSubscriptionScreenState extends ConsumerState<AddSubscriptionScreen> {
           nextPaymentDate: _nextPaymentDate,
           paymentMethod: _selectedPaymentMethodId,
           tags: _selectedTagIds,
+          isRecurring: _isRecurring,
         );
         await repository.addSubscription(subscription);
       } else {
@@ -89,6 +92,7 @@ class _AddSubscriptionScreenState extends ConsumerState<AddSubscriptionScreen> {
           nextPaymentDate: _nextPaymentDate,
           paymentMethod: _selectedPaymentMethodId,
           tags: _selectedTagIds,
+          isRecurring: _isRecurring,
         );
         await repository.updateSubscription(subscription);
       }
@@ -158,6 +162,14 @@ class _AddSubscriptionScreenState extends ConsumerState<AddSubscriptionScreen> {
                 if (value.length > 50) return '50文字以内で入力してください';
                 return null;
               },
+            ),
+            const SizedBox(height: 16),
+            
+            // 定期支払いか単発か
+            SwitchListTile(
+              title: const Text('定期支払い'),
+              value: _isRecurring,
+              onChanged: (value) => setState(() => _isRecurring = value),
             ),
             const SizedBox(height: 16),
             

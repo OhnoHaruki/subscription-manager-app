@@ -15,7 +15,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$Subscription {
 
- String get id; String get name; int get amount; BillingCycle get cycle; DateTime get nextPaymentDate; String get paymentMethod; List<String> get tags;
+ String get id; String get name; int get amount; BillingCycle get cycle; DateTime get nextPaymentDate; String get paymentMethod; List<String> get tags; bool get isRecurring;
 /// Create a copy of Subscription
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -28,16 +28,16 @@ $SubscriptionCopyWith<Subscription> get copyWith => _$SubscriptionCopyWithImpl<S
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is Subscription&&(identical(other.id, id) || other.id == id)&&(identical(other.name, name) || other.name == name)&&(identical(other.amount, amount) || other.amount == amount)&&(identical(other.cycle, cycle) || other.cycle == cycle)&&(identical(other.nextPaymentDate, nextPaymentDate) || other.nextPaymentDate == nextPaymentDate)&&(identical(other.paymentMethod, paymentMethod) || other.paymentMethod == paymentMethod)&&const DeepCollectionEquality().equals(other.tags, tags));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is Subscription&&(identical(other.id, id) || other.id == id)&&(identical(other.name, name) || other.name == name)&&(identical(other.amount, amount) || other.amount == amount)&&(identical(other.cycle, cycle) || other.cycle == cycle)&&(identical(other.nextPaymentDate, nextPaymentDate) || other.nextPaymentDate == nextPaymentDate)&&(identical(other.paymentMethod, paymentMethod) || other.paymentMethod == paymentMethod)&&const DeepCollectionEquality().equals(other.tags, tags)&&(identical(other.isRecurring, isRecurring) || other.isRecurring == isRecurring));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,id,name,amount,cycle,nextPaymentDate,paymentMethod,const DeepCollectionEquality().hash(tags));
+int get hashCode => Object.hash(runtimeType,id,name,amount,cycle,nextPaymentDate,paymentMethod,const DeepCollectionEquality().hash(tags),isRecurring);
 
 @override
 String toString() {
-  return 'Subscription(id: $id, name: $name, amount: $amount, cycle: $cycle, nextPaymentDate: $nextPaymentDate, paymentMethod: $paymentMethod, tags: $tags)';
+  return 'Subscription(id: $id, name: $name, amount: $amount, cycle: $cycle, nextPaymentDate: $nextPaymentDate, paymentMethod: $paymentMethod, tags: $tags, isRecurring: $isRecurring)';
 }
 
 
@@ -48,7 +48,7 @@ abstract mixin class $SubscriptionCopyWith<$Res>  {
   factory $SubscriptionCopyWith(Subscription value, $Res Function(Subscription) _then) = _$SubscriptionCopyWithImpl;
 @useResult
 $Res call({
- String id, String name, int amount, BillingCycle cycle, DateTime nextPaymentDate, String paymentMethod, List<String> tags
+ String id, String name, int amount, BillingCycle cycle, DateTime nextPaymentDate, String paymentMethod, List<String> tags, bool isRecurring
 });
 
 
@@ -65,7 +65,7 @@ class _$SubscriptionCopyWithImpl<$Res>
 
 /// Create a copy of Subscription
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? name = null,Object? amount = null,Object? cycle = null,Object? nextPaymentDate = null,Object? paymentMethod = null,Object? tags = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? name = null,Object? amount = null,Object? cycle = null,Object? nextPaymentDate = null,Object? paymentMethod = null,Object? tags = null,Object? isRecurring = null,}) {
   return _then(_self.copyWith(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,name: null == name ? _self.name : name // ignore: cast_nullable_to_non_nullable
@@ -74,7 +74,8 @@ as int,cycle: null == cycle ? _self.cycle : cycle // ignore: cast_nullable_to_no
 as BillingCycle,nextPaymentDate: null == nextPaymentDate ? _self.nextPaymentDate : nextPaymentDate // ignore: cast_nullable_to_non_nullable
 as DateTime,paymentMethod: null == paymentMethod ? _self.paymentMethod : paymentMethod // ignore: cast_nullable_to_non_nullable
 as String,tags: null == tags ? _self.tags : tags // ignore: cast_nullable_to_non_nullable
-as List<String>,
+as List<String>,isRecurring: null == isRecurring ? _self.isRecurring : isRecurring // ignore: cast_nullable_to_non_nullable
+as bool,
   ));
 }
 
@@ -156,10 +157,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id,  String name,  int amount,  BillingCycle cycle,  DateTime nextPaymentDate,  String paymentMethod,  List<String> tags)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id,  String name,  int amount,  BillingCycle cycle,  DateTime nextPaymentDate,  String paymentMethod,  List<String> tags,  bool isRecurring)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _Subscription() when $default != null:
-return $default(_that.id,_that.name,_that.amount,_that.cycle,_that.nextPaymentDate,_that.paymentMethod,_that.tags);case _:
+return $default(_that.id,_that.name,_that.amount,_that.cycle,_that.nextPaymentDate,_that.paymentMethod,_that.tags,_that.isRecurring);case _:
   return orElse();
 
 }
@@ -177,10 +178,10 @@ return $default(_that.id,_that.name,_that.amount,_that.cycle,_that.nextPaymentDa
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  String name,  int amount,  BillingCycle cycle,  DateTime nextPaymentDate,  String paymentMethod,  List<String> tags)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  String name,  int amount,  BillingCycle cycle,  DateTime nextPaymentDate,  String paymentMethod,  List<String> tags,  bool isRecurring)  $default,) {final _that = this;
 switch (_that) {
 case _Subscription():
-return $default(_that.id,_that.name,_that.amount,_that.cycle,_that.nextPaymentDate,_that.paymentMethod,_that.tags);}
+return $default(_that.id,_that.name,_that.amount,_that.cycle,_that.nextPaymentDate,_that.paymentMethod,_that.tags,_that.isRecurring);}
 }
 /// A variant of `when` that fallback to returning `null`
 ///
@@ -194,10 +195,10 @@ return $default(_that.id,_that.name,_that.amount,_that.cycle,_that.nextPaymentDa
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id,  String name,  int amount,  BillingCycle cycle,  DateTime nextPaymentDate,  String paymentMethod,  List<String> tags)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id,  String name,  int amount,  BillingCycle cycle,  DateTime nextPaymentDate,  String paymentMethod,  List<String> tags,  bool isRecurring)?  $default,) {final _that = this;
 switch (_that) {
 case _Subscription() when $default != null:
-return $default(_that.id,_that.name,_that.amount,_that.cycle,_that.nextPaymentDate,_that.paymentMethod,_that.tags);case _:
+return $default(_that.id,_that.name,_that.amount,_that.cycle,_that.nextPaymentDate,_that.paymentMethod,_that.tags,_that.isRecurring);case _:
   return null;
 
 }
@@ -209,7 +210,7 @@ return $default(_that.id,_that.name,_that.amount,_that.cycle,_that.nextPaymentDa
 @JsonSerializable()
 
 class _Subscription implements Subscription {
-  const _Subscription({required this.id, required this.name, required this.amount, required this.cycle, required this.nextPaymentDate, this.paymentMethod = '', final  List<String> tags = const []}): _tags = tags;
+  const _Subscription({required this.id, required this.name, required this.amount, required this.cycle, required this.nextPaymentDate, this.paymentMethod = '', final  List<String> tags = const [], this.isRecurring = true}): _tags = tags;
   factory _Subscription.fromJson(Map<String, dynamic> json) => _$SubscriptionFromJson(json);
 
 @override final  String id;
@@ -225,6 +226,7 @@ class _Subscription implements Subscription {
   return EqualUnmodifiableListView(_tags);
 }
 
+@override@JsonKey() final  bool isRecurring;
 
 /// Create a copy of Subscription
 /// with the given fields replaced by the non-null parameter values.
@@ -239,16 +241,16 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _Subscription&&(identical(other.id, id) || other.id == id)&&(identical(other.name, name) || other.name == name)&&(identical(other.amount, amount) || other.amount == amount)&&(identical(other.cycle, cycle) || other.cycle == cycle)&&(identical(other.nextPaymentDate, nextPaymentDate) || other.nextPaymentDate == nextPaymentDate)&&(identical(other.paymentMethod, paymentMethod) || other.paymentMethod == paymentMethod)&&const DeepCollectionEquality().equals(other._tags, _tags));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _Subscription&&(identical(other.id, id) || other.id == id)&&(identical(other.name, name) || other.name == name)&&(identical(other.amount, amount) || other.amount == amount)&&(identical(other.cycle, cycle) || other.cycle == cycle)&&(identical(other.nextPaymentDate, nextPaymentDate) || other.nextPaymentDate == nextPaymentDate)&&(identical(other.paymentMethod, paymentMethod) || other.paymentMethod == paymentMethod)&&const DeepCollectionEquality().equals(other._tags, _tags)&&(identical(other.isRecurring, isRecurring) || other.isRecurring == isRecurring));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,id,name,amount,cycle,nextPaymentDate,paymentMethod,const DeepCollectionEquality().hash(_tags));
+int get hashCode => Object.hash(runtimeType,id,name,amount,cycle,nextPaymentDate,paymentMethod,const DeepCollectionEquality().hash(_tags),isRecurring);
 
 @override
 String toString() {
-  return 'Subscription(id: $id, name: $name, amount: $amount, cycle: $cycle, nextPaymentDate: $nextPaymentDate, paymentMethod: $paymentMethod, tags: $tags)';
+  return 'Subscription(id: $id, name: $name, amount: $amount, cycle: $cycle, nextPaymentDate: $nextPaymentDate, paymentMethod: $paymentMethod, tags: $tags, isRecurring: $isRecurring)';
 }
 
 
@@ -259,7 +261,7 @@ abstract mixin class _$SubscriptionCopyWith<$Res> implements $SubscriptionCopyWi
   factory _$SubscriptionCopyWith(_Subscription value, $Res Function(_Subscription) _then) = __$SubscriptionCopyWithImpl;
 @override @useResult
 $Res call({
- String id, String name, int amount, BillingCycle cycle, DateTime nextPaymentDate, String paymentMethod, List<String> tags
+ String id, String name, int amount, BillingCycle cycle, DateTime nextPaymentDate, String paymentMethod, List<String> tags, bool isRecurring
 });
 
 
@@ -276,7 +278,7 @@ class __$SubscriptionCopyWithImpl<$Res>
 
 /// Create a copy of Subscription
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? name = null,Object? amount = null,Object? cycle = null,Object? nextPaymentDate = null,Object? paymentMethod = null,Object? tags = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? name = null,Object? amount = null,Object? cycle = null,Object? nextPaymentDate = null,Object? paymentMethod = null,Object? tags = null,Object? isRecurring = null,}) {
   return _then(_Subscription(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,name: null == name ? _self.name : name // ignore: cast_nullable_to_non_nullable
@@ -285,7 +287,8 @@ as int,cycle: null == cycle ? _self.cycle : cycle // ignore: cast_nullable_to_no
 as BillingCycle,nextPaymentDate: null == nextPaymentDate ? _self.nextPaymentDate : nextPaymentDate // ignore: cast_nullable_to_non_nullable
 as DateTime,paymentMethod: null == paymentMethod ? _self.paymentMethod : paymentMethod // ignore: cast_nullable_to_non_nullable
 as String,tags: null == tags ? _self._tags : tags // ignore: cast_nullable_to_non_nullable
-as List<String>,
+as List<String>,isRecurring: null == isRecurring ? _self.isRecurring : isRecurring // ignore: cast_nullable_to_non_nullable
+as bool,
   ));
 }
 

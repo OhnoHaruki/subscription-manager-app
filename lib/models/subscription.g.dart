@@ -17,6 +17,7 @@ _Subscription _$SubscriptionFromJson(Map<String, dynamic> json) =>
       tags:
           (json['tags'] as List<dynamic>?)?.map((e) => e as String).toList() ??
           const [],
+      isRecurring: json['isRecurring'] as bool? ?? true,
     );
 
 Map<String, dynamic> _$SubscriptionToJson(_Subscription instance) =>
@@ -28,6 +29,7 @@ Map<String, dynamic> _$SubscriptionToJson(_Subscription instance) =>
       'nextPaymentDate': instance.nextPaymentDate.toIso8601String(),
       'paymentMethod': instance.paymentMethod,
       'tags': instance.tags,
+      'isRecurring': instance.isRecurring,
     };
 
 const _$BillingCycleEnumMap = {

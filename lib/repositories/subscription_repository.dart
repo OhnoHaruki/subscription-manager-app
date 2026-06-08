@@ -66,6 +66,7 @@ class SubscriptionRepository {
       'cycle': json['cycle'],
       'next_payment_date': json['nextPaymentDate'],
       'payment_method_id': json['paymentMethod']?.isEmpty ?? true ? null : json['paymentMethod'],
+      'is_recurring': json['isRecurring'],
     };
 
     try {
@@ -98,6 +99,7 @@ class SubscriptionRepository {
       'cycle': json['cycle'],
       'next_payment_date': json['nextPaymentDate'],
       'payment_method_id': json['paymentMethod']?.isEmpty ?? true ? null : json['paymentMethod'],
+      'is_recurring': json['isRecurring'],
     };
 
     // サブスクリプション本体の更新

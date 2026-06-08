@@ -15,6 +15,7 @@ sealed class Subscription with _$Subscription {
     required DateTime nextPaymentDate,
     @Default('') String paymentMethod,
     @Default([]) List<String> tags,
+    @Default(true) bool isRecurring,
   }) = _Subscription;
 
   factory Subscription.fromJson(Map<String, dynamic> json) =>
