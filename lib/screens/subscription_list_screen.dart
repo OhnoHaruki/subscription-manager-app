@@ -93,6 +93,16 @@ class _SubscriptionListScreenState extends ConsumerState<SubscriptionListScreen>
     });
 
     return Scaffold(
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {
+          Navigator.of(context).push(
+            MaterialPageRoute(
+              builder: (context) => const AddSubscriptionScreen(),
+            ),
+          );
+        },
+        child: const Icon(Icons.add),
+      ),
       appBar: AppBar(
         title: _isSearching
             ? TextField(
