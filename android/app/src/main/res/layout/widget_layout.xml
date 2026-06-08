@@ -19,8 +19,16 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="¥0"
-        android:textSize="24sp"
+        android:textSize="20sp"
         android:textStyle="bold"
         android:textColor="@android:color/black" />
+
+    <TextView
+        android:id="@+id/next_payment_name"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="なし"
+        android:textSize="12sp"
+        android:textColor="@android:color/darker_gray" />
 
 </LinearLayout>

@@ -16,12 +16,11 @@ class NotificationService {
       tz.local,
     );
 
-    await _notificationsPlugin.zonedSchedule(
-      subscription.id.hashCode,
-      'お支払いリマインダー',
-      '${subscription.name} の支払い予定日が近づいています。',
-      scheduledDate,
-      const NotificationDetails(
+    await _notificationsPlugin.show(
+      id: subscription.id.hashCode,
+      title: 'お支払いリマインダー',
+      body: '${subscription.name} の支払い予定日が近づいています。',
+      notificationDetails: const NotificationDetails(
         android: AndroidNotificationDetails(
           'subscription_channel',
           'Subscription Reminders',
@@ -30,9 +29,6 @@ class NotificationService {
         ),
         iOS: DarwinNotificationDetails(),
       ),
-      uiLocalNotificationDateInterpretation:
-          UILocalNotificationDateInterpretation.absoluteTime,
-      androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
     );
   }
 }

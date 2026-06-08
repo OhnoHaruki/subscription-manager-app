@@ -12,6 +12,7 @@ class SubscriptionWidgetProvider : AppWidgetProvider() {
             val widgetData = HomeWidgetPlugin.getData(context)
             val views = RemoteViews(context.packageName, R.layout.widget_layout).apply {
                 setTextViewText(R.id.total_amount, widgetData.getString("total_amount", "¥0"))
+                setTextViewText(R.id.next_payment_name, widgetData.getString("next_payment_name", "なし"))
             }
             appWidgetManager.updateAppWidget(appWidgetId, views)
         }
