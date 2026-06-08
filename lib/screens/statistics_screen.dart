@@ -73,15 +73,7 @@ class StatisticsScreen extends ConsumerWidget {
                     style: const TextStyle(fontSize: 32, fontWeight: FontWeight.bold),
                   ),
                   const Divider(height: 32),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceAround,
-                    children: [
-                      _StatItem(
-                        label: '年間合計',
-                        value: currencyFormat.format(stats.yearlyTotal.toInt()),
-                      ),
-                    ],
-                  ),
+                  _BudgetSection(),
                 ],
               ),
             ),
@@ -224,19 +216,39 @@ class StatisticsScreen extends ConsumerWidget {
   }
 }
 
-class _StatItem extends StatelessWidget {
-  const _StatItem({required this.label, required this.value});
-  final String label;
-  final String value;
-
+class _BudgetSection extends ConsumerWidget {
   @override
-  Widget build(BuildContext context) {
-    return Column(
-      children: [
-        Text(label, style: const TextStyle(fontSize: 12, color: Colors.grey)),
-        const SizedBox(height: 4),
-        Text(value, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-      ],
+  Widget build(BuildContext context, WidgetRef ref) {
+    final now = DateTime.now();
+    final budgetsAsync = ref.watch(currentBudgetsProvider(now));
+    final stats = ref.watch(subscriptionStatsProvider);
+    final currencyFormat = NumberFormat.simpleCurrency(locale: 'ja_JP');
+
+    return budgetsAsync.when(
+      data: (budgets) {
+        final totalBudget = budgets.where((b) => b.tagId == null).fold(0, (sum, b) => sum + b.amount);
+        if (totalBudget == 0) return TextButton(onPressed: () {}, child: const Text('予算を設定する'));
+        
+        final isOver = stats.monthlyTotal > totalBudget;
+        return Column(
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Text('予算'),
+                Text('${currencyFormat.format(stats.monthlyTotal.toInt())} / ${currencyFormat.format(totalBudget)}'),
+              ],
+            ),
+            const SizedBox(height: 8),
+            LinearProgressIndicator(
+              value: stats.monthlyTotal / totalBudget,
+              color: isOver ? Colors.red : Colors.indigo,
+            ),
+          ],
+        );
+      },
+      loading: () => const LinearProgressIndicator(),
+      error: (_, __) => const SizedBox.shrink(),
     );
   }
 }
