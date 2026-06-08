@@ -2,7 +2,6 @@ import 'package:home_widget/home_widget.dart';
 
 /// ウィジェットのデータを管理するサービスクラス
 class WidgetService {
-  static const String _appGroupId = 'group.jp.co.optim.subscriptionManager'; // iOS用AppGroup ID
   static const String _androidWidgetName = 'SubscriptionWidgetProvider'; // Android用Provider名
 
   /// ウィジェットデータを保存して更新

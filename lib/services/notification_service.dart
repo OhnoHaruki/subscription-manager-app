@@ -11,7 +11,28 @@ class NotificationService {
   /// サブスクの支払い通知をスケジュールする
   Future<void> scheduleSubscriptionNotification(Subscription subscription) async {
     // 次回支払日の3日前（または当日）に設定
-    // TODO: zonedScheduleのAPIが変更されたため、適切な実装を再調査する
-    // 現在は通知機能の実装基盤のみとする
+    final scheduledDate = tz.TZDateTime.from(
+      subscription.nextPaymentDate.subtract(const Duration(days: 3)),
+      tz.local,
+    );
+
+    await _notificationsPlugin.zonedSchedule(
+      subscription.id.hashCode,
+      'お支払いリマインダー',
+      '${subscription.name} の支払い予定日が近づいています。',
+      scheduledDate,
+      const NotificationDetails(
+        android: AndroidNotificationDetails(
+          'subscription_channel',
+          'Subscription Reminders',
+          importance: Importance.high,
+          priority: Priority.high,
+        ),
+        iOS: DarwinNotificationDetails(),
+      ),
+      androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
+      uiLocalNotificationDateInterpretation:
+          UILocalNotificationDateInterpretation.absoluteTime,
+    );
   }
 }

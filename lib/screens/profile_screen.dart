@@ -212,6 +212,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                 title: const Text('お問い合わせ'),
                 trailing: const Icon(Icons.chevron_right),
                 onTap: () async {
+                  final context = this.context;
                   // TODO: 実際のサポート用メールアドレスに置き換えてください
                   final Uri emailLaunchUri = Uri(
                     scheme: 'mailto',
@@ -225,11 +226,10 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                       await launchUrl(emailLaunchUri);
                     }
                   } catch (e) {
-                    if (mounted) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('メールアプリを開けませんでした')),
-                      );
-                    }
+                    if (!mounted) return;
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('メールアプリを開けませんでした')),
+                    );
                   }
                 },
               ),
