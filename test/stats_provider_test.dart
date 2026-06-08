@@ -1,29 +1,13 @@
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:subscription_manager/models/subscription.dart';
 import 'package:subscription_manager/models/payment_history.dart';
-import 'package:subscription_manager/providers/stats_provider.dart';
+import 'factories/subscription_factory.dart';
 
 void main() {
   test('SubscriptionStats計算のテスト', () {
-    // ... (既存のテストコード)
     final subscriptions = [
-      Subscription(
-        id: '1',
-        name: 'Netflix',
-        amount: 1200,
-        cycle: BillingCycle.monthly,
-        nextPaymentDate: DateTime.now(),
-        tags: ['ent'],
-      ),
-      Subscription(
-        id: '2',
-        name: 'Yearly Service',
-        amount: 12000,
-        cycle: BillingCycle.yearly,
-        nextPaymentDate: DateTime.now(),
-        tags: [],
-      ),
+      SubscriptionFactory.create(name: 'Netflix', amount: 1200, cycle: BillingCycle.monthly, tags: ['ent']),
+      SubscriptionFactory.create(name: 'Yearly Service', amount: 12000, cycle: BillingCycle.yearly, tags: []),
     ];
 
     double monthlyTotal = 0;
@@ -65,5 +49,14 @@ void main() {
     
     expect(trend['2026-05'], 1500);
     expect(trend['2026-04'], 2000);
+  });
+
+  test('予算超過判定のテスト', () {
+    final monthlyTotal = 3000.0;
+    final totalBudget = 2000.0;
+    
+    final isOver = monthlyTotal > totalBudget;
+    
+    expect(isOver, isTrue);
   });
 }

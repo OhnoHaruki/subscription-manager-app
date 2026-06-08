@@ -1,6 +1,8 @@
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:subscription_manager/main.dart';
+import 'package:subscription_manager/screens/login_screen.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:subscription_manager/providers/subscription_provider.dart';
@@ -32,5 +34,28 @@ void main() {
     
     await tester.pump();
     expect(find.text('ログイン'), findsAtLeastNWidgets(1));
+  });
+
+  testWidgets('ログイン画面のバリデーションエラーチェック', (WidgetTester tester) async {
+    final mockSupabase = MockSupabaseClient();
+    final mockAuth = MockGoTrueClient();
+    when(() => mockSupabase.auth).thenReturn(mockAuth);
+
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          supabaseProvider.overrideWithValue(mockSupabase),
+        ],
+        child: MaterialApp(home: LoginScreen()),
+      ),
+    );
+
+    // 空の状態でログインボタンを押す
+    await tester.tap(find.byType(ElevatedButton));
+    await tester.pump();
+
+    // バリデーションエラーが表示されることを確認
+    expect(find.text('メールアドレスを入力してください'), findsOneWidget);
+    expect(find.text('パスワードを入力してください'), findsOneWidget);
   });
 }

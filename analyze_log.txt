@@ -1,0 +1,17 @@
+Analyzing subscription-manager-app...                           
+
+   info • 'anonKey' is deprecated and shouldn't be used. Use publishableKey instead. anonKey will be removed in a future major version • lib/main.dart:17:5 • deprecated_member_use
+   info • Don't use 'BuildContext's across async gaps, guarded by an unrelated 'mounted' check • lib/screens/profile_screen.dart:229:44 • use_build_context_synchronously
+   info • Unnecessary use of multiple underscores • lib/screens/statistics_screen.dart:252:18 • unnecessary_underscores
+warning • Unused import: 'package:timezone/timezone.dart' • lib/services/notification_service.dart:2:8 • unused_import
+warning • The value of the field '_notificationsPlugin' isn't used • lib/services/notification_service.dart:6:41 • unused_field
+warning • The value of the field '_appGroupId' isn't used • lib/services/widget_service.dart:5:23 • unused_field
+warning • Unused import: 'package:subscription_manager/main.dart' • test/auth_flow_test.dart:6:8 • unused_import
+warning • Unused import: 'package:subscription_manager/providers/subscription_provider.dart' • test/auth_flow_test.dart:7:8 • unused_import
+warning • Unused import: 'package:subscription_manager/providers/payment_method_provider.dart' • test/auth_flow_test.dart:8:8 • unused_import
+warning • Unused import: 'package:subscription_manager/providers/profile_provider.dart' • test/auth_flow_test.dart:9:8 • unused_import
+warning • Unused import: 'package:subscription_manager/models/profile.dart' • test/auth_flow_test.dart:10:8 • unused_import
+warning • Unused import: 'package:flutter_riverpod/flutter_riverpod.dart' • test/stats_provider_test.dart:1:8 • unused_import
+   info • 'setMockMethodCallHandler' is deprecated and shouldn't be used. Use tester.binding.defaultBinaryMessenger.setMockMethodCallHandler or TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger.setMockMethodCallHandler instead. Pass the channel as the first argument. This feature was deprecated after v3.9.0-19.0.pre • test/widget_service_test.dart:12:40 • deprecated_member_use
+
+13 issues found. (ran in 1.6s)

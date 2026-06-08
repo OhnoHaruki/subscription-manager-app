@@ -69,10 +69,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
         padding: const EdgeInsets.all(24.0),
         child: Form(
           key: _formKey,
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
+          child: ListView(
             children: [
+              const SizedBox(height: 48),
               const Icon(Icons.subscriptions_rounded, size: 80, color: Colors.indigo),
               const SizedBox(height: 16),
               const Text(
