@@ -208,7 +208,7 @@ class _SubscriptionTile extends ConsumerWidget {
                   return Container(
                     padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                     decoration: BoxDecoration(
-                      color: Colors.deepPurple.withOpacity(0.1),
+                      color: Colors.deepPurple.withAlpha(25),
                       borderRadius: BorderRadius.circular(4),
                     ),
                     child: Text(

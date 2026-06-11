@@ -1,7 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/subscription.dart';
 import 'subscription_provider.dart';
-import 'tag_provider.dart';
 
 /// 統計情報を表すモデル
 class SubscriptionStats {
