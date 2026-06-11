@@ -40,3 +40,14 @@
 ## 5. ドキュメント化
 - データベース構造を `database_schema.md` として管理。
 - 各 Issue への進捗コメントと PR の作成完了。
+
+## 6. プロフィール画面の実装とログアウト機能の改善
+- **Profile機能の実装**:
+  - `Profile` モデル、`ProfileRepository`、`profileProvider` を新規作成し、`profiles` テーブルのデータを管理。
+  - `ProfileScreen` を作成し、ユーザー名（username）の編集機能を実装。
+- **ナビゲーションの整理**:
+  - `SubscriptionListScreen` の Drawer に「プロフィール」メニューを追加。
+  - ログアウト機能を `ProfileScreen` に集約し、メイン画面の AppBar からは削除。
+- **動作検証**:
+  - `test/auth_flow_test.dart` にプロフィール画面への遷移およびデータ表示のテストを追加し、正常動作を確認。
+

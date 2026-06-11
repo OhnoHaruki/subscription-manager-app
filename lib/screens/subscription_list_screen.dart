@@ -5,11 +5,12 @@ import '../models/subscription.dart';
 import '../providers/subscription_provider.dart';
 import '../providers/payment_method_provider.dart';
 import '../providers/auth_provider.dart';
+import '../providers/tag_provider.dart';
 import 'add_subscription_screen.dart';
 import 'payment_method_list_screen.dart';
 import 'tag_list_screen.dart';
+import 'profile_screen.dart';
 import 'statistics_screen.dart';
-import '../providers/tag_provider.dart';
 
 /// サブスクリプション一覧を表示するホーム画面
 class SubscriptionListScreen extends ConsumerWidget {
@@ -28,12 +29,13 @@ class SubscriptionListScreen extends ConsumerWidget {
         backgroundColor: Theme.of(context).colorScheme.inversePrimary,
         actions: [
           IconButton(
-            icon: const Icon(Icons.logout),
-            onPressed: () async {
-              // ログアウト処理
-              await ref.read(authRepositoryProvider).signOut();
+            icon: const Icon(Icons.person_outline),
+            onPressed: () {
+              Navigator.of(context).push(
+                MaterialPageRoute(builder: (context) => const ProfileScreen()),
+              );
             },
-            tooltip: 'ログアウト',
+            tooltip: 'プロフィール',
           ),
         ],
       ),
@@ -46,6 +48,16 @@ class SubscriptionListScreen extends ConsumerWidget {
                 'メニュー',
                 style: TextStyle(color: Colors.white, fontSize: 24),
               ),
+            ),
+            ListTile(
+              leading: const Icon(Icons.person),
+              title: const Text('プロフィール'),
+              onTap: () {
+                Navigator.pop(context); // Close drawer
+                Navigator.of(context).push(
+                  MaterialPageRoute(builder: (context) => const ProfileScreen()),
+                );
+              },
             ),
             ListTile(
               leading: const Icon(Icons.credit_card),
