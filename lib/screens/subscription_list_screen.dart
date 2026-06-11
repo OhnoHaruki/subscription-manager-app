@@ -5,8 +5,10 @@ import '../models/subscription.dart';
 import '../providers/subscription_provider.dart';
 import '../providers/payment_method_provider.dart';
 import '../providers/auth_provider.dart';
+import '../providers/tag_provider.dart';
 import 'add_subscription_screen.dart';
 import 'payment_method_list_screen.dart';
+import 'tag_list_screen.dart';
 import 'profile_screen.dart';
 
 /// サブスクリプション一覧を表示するホーム画面
@@ -63,6 +65,16 @@ class SubscriptionListScreen extends ConsumerWidget {
                 Navigator.pop(context); // Close drawer
                 Navigator.of(context).push(
                   MaterialPageRoute(builder: (context) => const PaymentMethodListScreen()),
+                );
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.label),
+              title: const Text('タグ管理'),
+              onTap: () {
+                Navigator.pop(context); // Close drawer
+                Navigator.of(context).push(
+                  MaterialPageRoute(builder: (context) => const TagListScreen()),
                 );
               },
             ),
@@ -147,21 +159,55 @@ class _SubscriptionTile extends ConsumerWidget {
 
     // 支払い方法の名称を取得
     final paymentMethods = ref.watch(paymentMethodsProvider).value ?? [];
-    final paymentMethodName = paymentMethods
-        .where((m) => m.id == subscription.paymentMethod)
-        .map((m) => m.name)
-        .firstOrNull ?? '未設定';
+    final paymentMethod = paymentMethods.where((m) => m.id == subscription.paymentMethod).firstOrNull;
+    final paymentMethodName = paymentMethod?.name ?? '未設定';
+
+    // 有効期限警告のチェック
+    final expiringMethods = ref.watch(expiringPaymentMethodsProvider);
+    final isMethodExpiring = paymentMethod != null && expiringMethods.any((m) => m.id == paymentMethod.id);
+
+    // タグ名を取得
+    final allTags = ref.watch(tagsProvider).value ?? [];
+    final subscriptionTags = allTags.where((t) => subscription.tags.contains(t.id)).toList();
 
     return ListTile(
       leading: CircleAvatar(
         child: Text(subscription.name.characters.first.toUpperCase()),
       ),
-      title: Text(subscription.name),
+      title: Row(
+        children: [
+          Text(subscription.name),
+          if (isMethodExpiring) ...[
+            const SizedBox(width: 8),
+            const Icon(Icons.warning_amber_rounded, size: 16, color: Colors.orange),
+          ],
+        ],
+      ),
       subtitle: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text('次回支払日: ${dateFormatter.format(subscription.nextPaymentDate)}'),
           Text('支払い方法: $paymentMethodName', style: const TextStyle(fontSize: 12, color: Colors.grey)),
+          if (subscriptionTags.isNotEmpty)
+            Padding(
+              padding: const EdgeInsets.only(top: 4),
+              child: Wrap(
+                spacing: 4,
+                children: subscriptionTags.map((tag) {
+                  return Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                    decoration: BoxDecoration(
+                      color: Colors.deepPurple.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(4),
+                    ),
+                    child: Text(
+                      tag.name,
+                      style: const TextStyle(fontSize: 10, color: Colors.deepPurple),
+                    ),
+                  );
+                }).toList(),
+              ),
+            ),
         ],
       ),
       trailing: Column(

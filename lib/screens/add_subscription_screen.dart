@@ -5,6 +5,7 @@ import 'package:intl/intl.dart';
 import '../models/subscription.dart';
 import '../providers/subscription_provider.dart';
 import '../providers/payment_method_provider.dart';
+import '../providers/tag_provider.dart';
 import 'add_payment_method_screen.dart';
 
 /// サブスクリプション登録・編集画面
@@ -28,6 +29,7 @@ class _AddSubscriptionScreenState extends ConsumerState<AddSubscriptionScreen> {
   late BillingCycle _cycle;
   late DateTime _nextPaymentDate;
   late String _selectedPaymentMethodId;
+  late List<String> _selectedTagIds;
 
   @override
   void initState() {
@@ -44,6 +46,7 @@ class _AddSubscriptionScreenState extends ConsumerState<AddSubscriptionScreen> {
     _cycle = widget.subscription?.cycle ?? BillingCycle.monthly;
     _nextPaymentDate = widget.subscription?.nextPaymentDate ?? DateTime.now();
     _selectedPaymentMethodId = widget.subscription?.paymentMethod ?? '';
+    _selectedTagIds = List.from(widget.subscription?.tags ?? []);
   }
 
   @override
@@ -71,6 +74,7 @@ class _AddSubscriptionScreenState extends ConsumerState<AddSubscriptionScreen> {
         cycle: _cycle,
         nextPaymentDate: _nextPaymentDate,
         paymentMethod: _selectedPaymentMethodId,
+        tags: _selectedTagIds,
       );
       await repository.addSubscription(subscription);
     } else {
@@ -81,6 +85,7 @@ class _AddSubscriptionScreenState extends ConsumerState<AddSubscriptionScreen> {
         cycle: _cycle,
         nextPaymentDate: _nextPaymentDate,
         paymentMethod: _selectedPaymentMethodId,
+        tags: _selectedTagIds,
       );
       await repository.updateSubscription(subscription);
     }
@@ -229,6 +234,39 @@ class _AddSubscriptionScreenState extends ConsumerState<AddSubscriptionScreen> {
               ),
               loading: () => const Center(child: LinearProgressIndicator()),
               error: (e, _) => Text('支払い方法の読み込みエラー: $e'),
+            ),
+
+            const Divider(),
+            
+            // タグの選択
+            const Padding(
+              padding: EdgeInsets.symmetric(vertical: 8),
+              child: Text('タグ', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+            ),
+            ref.watch(tagsProvider).when(
+              data: (tags) => tags.isEmpty
+                  ? const Text('タグが登録されていません。メニューからタグを追加できます。', style: TextStyle(fontSize: 12, color: Colors.grey))
+                  : Wrap(
+                      spacing: 8,
+                      children: tags.map((tag) {
+                        final isSelected = _selectedTagIds.contains(tag.id);
+                        return FilterChip(
+                          label: Text(tag.name),
+                          selected: isSelected,
+                          onSelected: (selected) {
+                            setState(() {
+                              if (selected) {
+                                _selectedTagIds.add(tag.id);
+                              } else {
+                                _selectedTagIds.remove(tag.id);
+                              }
+                            });
+                          },
+                        );
+                      }).toList(),
+                    ),
+              loading: () => const Center(child: LinearProgressIndicator()),
+              error: (e, _) => Text('タグの読み込みエラー: $e'),
             ),
           ],
         ),
