@@ -4,7 +4,6 @@ import 'package:intl/intl.dart';
 import '../models/subscription.dart';
 import '../providers/subscription_provider.dart';
 import '../providers/payment_method_provider.dart';
-import '../providers/auth_provider.dart';
 import '../providers/tag_provider.dart';
 import 'add_subscription_screen.dart';
 import 'payment_method_list_screen.dart';

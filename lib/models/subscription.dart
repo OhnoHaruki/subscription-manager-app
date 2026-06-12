@@ -14,6 +14,7 @@ sealed class Subscription with _$Subscription {
     required BillingCycle cycle,
     @JsonKey(name: 'next_payment_date') required DateTime nextPaymentDate,
     @JsonKey(name: 'payment_method_id') @Default('') String paymentMethod,
+    @JsonKey(name: 'is_recurring') @Default(true) bool isRecurring,
     @Default([]) List<String> tags,
   }) = _Subscription;
 

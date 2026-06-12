@@ -17,14 +17,16 @@ class PaymentHistoryRepository {
         .eq('subscription_id', subscriptionId)
         .order('paid_date', ascending: false);
 
-    return (response as List).map((map) {
-      final data = Map<String, dynamic>.from(map);
-      data['id'] = map['id'];
-      data['subscriptionId'] = map['subscription_id'];
-      data['paidDate'] = map['paid_date'];
-      data['amount'] = map['amount'];
-      return PaymentHistory.fromJson(data);
-    }).toList();
+    return (response as List).map((map) => PaymentHistory.fromJson(map)).toList();
+  }
+
+  /// 全ての支払い履歴を取得する
+  Future<List<PaymentHistory>> getAllHistory() async {
+    final response = await _table
+        .select()
+        .order('paid_date', ascending: false);
+
+    return (response as List).map((map) => PaymentHistory.fromJson(map)).toList();
   }
 
   /// 支払いを記録する

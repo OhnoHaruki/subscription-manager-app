@@ -59,9 +59,11 @@ class SubscriptionRepository {
       'name': json['name'],
       'amount': json['amount'],
       'cycle': json['cycle'],
-      'next_payment_date': json['nextPaymentDate'],
-      'payment_method_id': json['paymentMethod']?.isEmpty ?? true ? null : json['paymentMethod'],
-    };
+      'next_payment_date': json['next_payment_date'],
+      'payment_method_id': json['payment_method_id']?.isEmpty ?? true ? null : json['payment_method_id'],
+      'is_recurring': json['is_recurring'],
+      };
+
 
     try {
       // サブスクリプションの挿入
@@ -91,9 +93,11 @@ class SubscriptionRepository {
       'name': json['name'],
       'amount': json['amount'],
       'cycle': json['cycle'],
-      'next_payment_date': json['nextPaymentDate'],
-      'payment_method_id': json['paymentMethod']?.isEmpty ?? true ? null : json['paymentMethod'],
-    };
+      'next_payment_date': json['next_payment_date'],
+      'payment_method_id': json['payment_method_id']?.isEmpty ?? true ? null : json['payment_method_id'],
+      'is_recurring': json['is_recurring'],
+      };
+
 
     // サブスクリプション本体の更新
     await _table.update(supabaseJson).eq('id', id);
