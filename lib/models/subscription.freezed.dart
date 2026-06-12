@@ -15,7 +15,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$Subscription {
 
- String get id; String get name; int get amount; BillingCycle get cycle; DateTime get nextPaymentDate; String get paymentMethod; List<String> get tags;
+ String get id; String get name; int get amount; BillingCycle get cycle;@JsonKey(name: 'next_payment_date') DateTime get nextPaymentDate;@JsonKey(name: 'payment_method_id') String get paymentMethod; List<String> get tags;
 /// Create a copy of Subscription
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -48,7 +48,7 @@ abstract mixin class $SubscriptionCopyWith<$Res>  {
   factory $SubscriptionCopyWith(Subscription value, $Res Function(Subscription) _then) = _$SubscriptionCopyWithImpl;
 @useResult
 $Res call({
- String id, String name, int amount, BillingCycle cycle, DateTime nextPaymentDate, String paymentMethod, List<String> tags
+ String id, String name, int amount, BillingCycle cycle,@JsonKey(name: 'next_payment_date') DateTime nextPaymentDate,@JsonKey(name: 'payment_method_id') String paymentMethod, List<String> tags
 });
 
 
@@ -156,7 +156,7 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id,  String name,  int amount,  BillingCycle cycle,  DateTime nextPaymentDate,  String paymentMethod,  List<String> tags)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id,  String name,  int amount,  BillingCycle cycle, @JsonKey(name: 'next_payment_date')  DateTime nextPaymentDate, @JsonKey(name: 'payment_method_id')  String paymentMethod,  List<String> tags)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _Subscription() when $default != null:
 return $default(_that.id,_that.name,_that.amount,_that.cycle,_that.nextPaymentDate,_that.paymentMethod,_that.tags);case _:
@@ -177,7 +177,7 @@ return $default(_that.id,_that.name,_that.amount,_that.cycle,_that.nextPaymentDa
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  String name,  int amount,  BillingCycle cycle,  DateTime nextPaymentDate,  String paymentMethod,  List<String> tags)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  String name,  int amount,  BillingCycle cycle, @JsonKey(name: 'next_payment_date')  DateTime nextPaymentDate, @JsonKey(name: 'payment_method_id')  String paymentMethod,  List<String> tags)  $default,) {final _that = this;
 switch (_that) {
 case _Subscription():
 return $default(_that.id,_that.name,_that.amount,_that.cycle,_that.nextPaymentDate,_that.paymentMethod,_that.tags);}
@@ -194,7 +194,7 @@ return $default(_that.id,_that.name,_that.amount,_that.cycle,_that.nextPaymentDa
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id,  String name,  int amount,  BillingCycle cycle,  DateTime nextPaymentDate,  String paymentMethod,  List<String> tags)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id,  String name,  int amount,  BillingCycle cycle, @JsonKey(name: 'next_payment_date')  DateTime nextPaymentDate, @JsonKey(name: 'payment_method_id')  String paymentMethod,  List<String> tags)?  $default,) {final _that = this;
 switch (_that) {
 case _Subscription() when $default != null:
 return $default(_that.id,_that.name,_that.amount,_that.cycle,_that.nextPaymentDate,_that.paymentMethod,_that.tags);case _:
@@ -209,15 +209,15 @@ return $default(_that.id,_that.name,_that.amount,_that.cycle,_that.nextPaymentDa
 @JsonSerializable()
 
 class _Subscription implements Subscription {
-  const _Subscription({required this.id, required this.name, required this.amount, required this.cycle, required this.nextPaymentDate, this.paymentMethod = '', final  List<String> tags = const []}): _tags = tags;
+  const _Subscription({required this.id, required this.name, required this.amount, required this.cycle, @JsonKey(name: 'next_payment_date') required this.nextPaymentDate, @JsonKey(name: 'payment_method_id') this.paymentMethod = '', final  List<String> tags = const []}): _tags = tags;
   factory _Subscription.fromJson(Map<String, dynamic> json) => _$SubscriptionFromJson(json);
 
 @override final  String id;
 @override final  String name;
 @override final  int amount;
 @override final  BillingCycle cycle;
-@override final  DateTime nextPaymentDate;
-@override@JsonKey() final  String paymentMethod;
+@override@JsonKey(name: 'next_payment_date') final  DateTime nextPaymentDate;
+@override@JsonKey(name: 'payment_method_id') final  String paymentMethod;
  final  List<String> _tags;
 @override@JsonKey() List<String> get tags {
   if (_tags is EqualUnmodifiableListView) return _tags;
@@ -259,7 +259,7 @@ abstract mixin class _$SubscriptionCopyWith<$Res> implements $SubscriptionCopyWi
   factory _$SubscriptionCopyWith(_Subscription value, $Res Function(_Subscription) _then) = __$SubscriptionCopyWithImpl;
 @override @useResult
 $Res call({
- String id, String name, int amount, BillingCycle cycle, DateTime nextPaymentDate, String paymentMethod, List<String> tags
+ String id, String name, int amount, BillingCycle cycle,@JsonKey(name: 'next_payment_date') DateTime nextPaymentDate,@JsonKey(name: 'payment_method_id') String paymentMethod, List<String> tags
 });
 
 

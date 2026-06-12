@@ -40,6 +40,14 @@ migrate_working_dir/
 # Symbolication related
 app.*.symbols
 
+# Supabase
+supabase/.temp/
+
+# Environment variables
+.env
+.env.*
+!.env.example
+
 # Obfuscation related
 app.*.map.json
 

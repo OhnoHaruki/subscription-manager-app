@@ -20,30 +20,31 @@ class SubscriptionRepository {
         .stream(primaryKey: ['id'])
         .eq('user_id', userId)
         .asyncMap((maps) async {
-          final subscriptions = <Subscription>[];
-          
-          for (final map in maps) {
-            final data = Map<String, dynamic>.from(map);
-            data['id'] = map['id'];
-            data['nextPaymentDate'] = data['next_payment_date'];
-            data.remove('next_payment_date');
+          if (maps.isEmpty) return [];
 
-            // 紐付いているタグのIDを取得
-            final tagResponse = await _client
-                .from('subscription_tags')
-                .select('tag_id')
-                .eq('subscription_id', map['id']);
-            
-            final tagIds = (tagResponse as List)
-                .map((item) => item['tag_id'] as String)
-                .toList();
-            
-            data['tags'] = tagIds;
-            subscriptions.add(Subscription.fromJson(data));
+          final subscriptionIds = maps.map((m) => m['id'] as String).toList();
+
+          // 紐付いているタグを一括取得 (Batch query)
+          final tagResponse = await _client
+              .from('subscription_tags')
+              .select('subscription_id, tag_id')
+              .inFilter('subscription_id', subscriptionIds);
+
+          final tagsMap = <String, List<String>>{};
+          for (final row in tagResponse as List) {
+            final subId = row['subscription_id'] as String;
+            final tagId = row['tag_id'] as String;
+            tagsMap.putIfAbsent(subId, () => []).add(tagId);
           }
-          return subscriptions;
+
+          return maps.map((map) {
+            final data = Map<String, dynamic>.from(map);
+            data['tags'] = tagsMap[map['id']] ?? [];
+            return Subscription.fromJson(data);
+          }).toList();
         });
-  }
+    }
+
 
   /// 新規サブスクリプションを追加する
   Future<void> addSubscription(Subscription subscription) async {
@@ -76,9 +77,6 @@ class SubscriptionRepository {
         await _client.from('subscription_tags').insert(tagInserts);
       }
     } catch (e) {
-      if (e is PostgrestException) {
-        print('Supabase Error: ${e.message}, Detail: ${e.details}');
-      }
       rethrow;
     }
   }
@@ -109,6 +107,36 @@ class SubscriptionRepository {
       }).toList();
       await _client.from('subscription_tags').insert(tagInserts);
     }
+  }
+
+  /// 支払い完了を記録し、次回支払日を更新する
+  Future<void> markAsPaid(String subscriptionId, DateTime currentNextPaymentDate, int amount) async {
+    final user = _client.auth.currentUser;
+    if (user == null) throw Exception('ログインが必要です');
+
+    // 次回支払日を計算（月額なら1ヶ月後、年額なら1年後）
+    // ※今回は簡略化のため、単純に1ヶ月/1年加算するロジック
+    // 実際にはBillingCycle enumを使用する
+    final subscription = await _table.select().eq('id', subscriptionId).single();
+    final cycle = subscription['cycle'] == 'monthly' ? 'monthly' : 'yearly';
+    
+    DateTime nextPaymentDate = currentNextPaymentDate;
+    if (cycle == 'monthly') {
+      nextPaymentDate = DateTime(nextPaymentDate.year, nextPaymentDate.month + 1, nextPaymentDate.day);
+    } else {
+      nextPaymentDate = DateTime(nextPaymentDate.year + 1, nextPaymentDate.month, nextPaymentDate.day);
+    }
+
+    // トランザクション的に処理（SupabaseはRPCを使うのが理想だが、ここでは順次実行）
+    await _client.from('payment_histories').insert({
+      'subscription_id': subscriptionId,
+      'paid_date': DateTime.now().toIso8601String(),
+      'amount': amount,
+    });
+
+    await _table.update({
+      'next_payment_date': nextPaymentDate.toIso8601String(),
+    }).eq('id', subscriptionId);
   }
 
   /// サブスクリプションを削除する

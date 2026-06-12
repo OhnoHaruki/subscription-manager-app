@@ -51,3 +51,15 @@
 - **動作検証**:
   - `test/auth_flow_test.dart` にプロフィール画面への遷移およびデータ表示のテストを追加し、正常動作を確認。
 
+## 7. 退会機能とプライバシーポリシーの実装 (Issue 39)
+- **退会機能 (Account Deletion)**:
+  - `ProfileRepository` に `deleteUser` メソッドを追加。
+  - Supabase Edge Function (`delete-user`) を実装し、Admin API を使用してユーザーを完全に削除するように構成。
+  - `ProfileScreen` に「アカウントを削除する」ボタンを追加し、削除後のログアウト処理を実装。
+- **プライバシーポリシー (Privacy Policy)**:
+  - `PRIVACY_POLICY.md` を作成。
+  - `PrivacyPolicyScreen` を実装し、Markdown 形式でポリシーを表示できるように対応。
+  - `ProfileScreen`、`SignUpScreen`、および Drawer メニューからプライバシーポリシーを表示できるようにリンクを追加。
+- **動作検証**:
+  - `test/auth_flow_test.dart` にプライバシーポリシー画面への遷移テストを追加。
+

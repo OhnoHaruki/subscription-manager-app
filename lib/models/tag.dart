@@ -8,7 +8,7 @@ sealed class Tag with _$Tag {
   const factory Tag({
     required String id,
     required String name,
-    required String userId,
+    @JsonKey(name: 'user_id') required String userId,
   }) = _Tag;
 
   factory Tag.fromJson(Map<String, dynamic> json) => _$TagFromJson(json);

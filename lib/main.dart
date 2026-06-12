@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'screens/subscription_list_screen.dart';
 import 'screens/login_screen.dart';
 import 'providers/auth_provider.dart';
@@ -9,10 +10,13 @@ import 'providers/theme_provider.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
+  // 環境変数の読み込み
+  await dotenv.load(fileName: '.env');
+
   // Supabaseの初期化
   await Supabase.initialize(
-    url: 'https://cnzemczppkrgwvnoygmk.supabase.co',
-    anonKey: 'sb_publishable_bRM5u1ymGPyGGLhZm9G_6w_IjVoSVti',
+    url: dotenv.get('SUPABASE_URL'),
+    anonKey: dotenv.get('SUPABASE_ANON_KEY'),
   );
 
   runApp(const ProviderScope(child: MyApp()));
