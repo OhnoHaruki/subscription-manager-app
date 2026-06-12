@@ -12,8 +12,8 @@ sealed class Subscription with _$Subscription {
     required String name,
     required int amount,
     required BillingCycle cycle,
-    required DateTime nextPaymentDate,
-    @Default('') String paymentMethod,
+    @JsonKey(name: 'next_payment_date') required DateTime nextPaymentDate,
+    @JsonKey(name: 'payment_method_id') @Default('') String paymentMethod,
     @Default([]) List<String> tags,
   }) = _Subscription;
 

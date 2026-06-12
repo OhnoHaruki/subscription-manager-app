@@ -15,7 +15,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$Tag {
 
- String get id; String get name; String get userId;
+ String get id; String get name;@JsonKey(name: 'user_id') String get userId;
 /// Create a copy of Tag
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -48,7 +48,7 @@ abstract mixin class $TagCopyWith<$Res>  {
   factory $TagCopyWith(Tag value, $Res Function(Tag) _then) = _$TagCopyWithImpl;
 @useResult
 $Res call({
- String id, String name, String userId
+ String id, String name,@JsonKey(name: 'user_id') String userId
 });
 
 
@@ -152,7 +152,7 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id,  String name,  String userId)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id,  String name, @JsonKey(name: 'user_id')  String userId)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _Tag() when $default != null:
 return $default(_that.id,_that.name,_that.userId);case _:
@@ -173,7 +173,7 @@ return $default(_that.id,_that.name,_that.userId);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  String name,  String userId)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  String name, @JsonKey(name: 'user_id')  String userId)  $default,) {final _that = this;
 switch (_that) {
 case _Tag():
 return $default(_that.id,_that.name,_that.userId);}
@@ -190,7 +190,7 @@ return $default(_that.id,_that.name,_that.userId);}
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id,  String name,  String userId)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id,  String name, @JsonKey(name: 'user_id')  String userId)?  $default,) {final _that = this;
 switch (_that) {
 case _Tag() when $default != null:
 return $default(_that.id,_that.name,_that.userId);case _:
@@ -205,12 +205,12 @@ return $default(_that.id,_that.name,_that.userId);case _:
 @JsonSerializable()
 
 class _Tag implements Tag {
-  const _Tag({required this.id, required this.name, required this.userId});
+  const _Tag({required this.id, required this.name, @JsonKey(name: 'user_id') required this.userId});
   factory _Tag.fromJson(Map<String, dynamic> json) => _$TagFromJson(json);
 
 @override final  String id;
 @override final  String name;
-@override final  String userId;
+@override@JsonKey(name: 'user_id') final  String userId;
 
 /// Create a copy of Tag
 /// with the given fields replaced by the non-null parameter values.
@@ -245,7 +245,7 @@ abstract mixin class _$TagCopyWith<$Res> implements $TagCopyWith<$Res> {
   factory _$TagCopyWith(_Tag value, $Res Function(_Tag) _then) = __$TagCopyWithImpl;
 @override @useResult
 $Res call({
- String id, String name, String userId
+ String id, String name,@JsonKey(name: 'user_id') String userId
 });
 
 

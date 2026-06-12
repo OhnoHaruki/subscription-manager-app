@@ -39,9 +39,6 @@ class SubscriptionRepository {
 
           return maps.map((map) {
             final data = Map<String, dynamic>.from(map);
-            data['id'] = map['id'];
-            data['nextPaymentDate'] = data['next_payment_date'];
-            data.remove('next_payment_date');
             data['tags'] = tagsMap[map['id']] ?? [];
             return Subscription.fromJson(data);
           }).toList();

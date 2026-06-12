@@ -14,6 +14,8 @@ jobs:
       - uses: subosito/flutter-action@v2
         with:
           channel: 'stable'
+      - name: Create dummy .env
+        run: touch .env
       - run: flutter pub get
       - run: flutter analyze
       - run: flutter test

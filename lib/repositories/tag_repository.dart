@@ -18,14 +18,7 @@ class TagRepository {
     return _table
         .stream(primaryKey: ['id'])
         .eq('user_id', userId)
-        .map((maps) {
-          return maps.map((map) {
-            final data = Map<String, dynamic>.from(map);
-            data['userId'] = data['user_id'];
-            data.remove('user_id');
-            return Tag.fromJson(data);
-          }).toList();
-        });
+        .map((maps) => maps.map((map) => Tag.fromJson(map)).toList());
   }
 
   /// 新規タグを追加する

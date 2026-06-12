@@ -9,11 +9,11 @@ part of 'tag.dart';
 _Tag _$TagFromJson(Map<String, dynamic> json) => _Tag(
   id: json['id'] as String,
   name: json['name'] as String,
-  userId: json['userId'] as String,
+  userId: json['user_id'] as String,
 );
 
 Map<String, dynamic> _$TagToJson(_Tag instance) => <String, dynamic>{
   'id': instance.id,
   'name': instance.name,
-  'userId': instance.userId,
+  'user_id': instance.userId,
 };
