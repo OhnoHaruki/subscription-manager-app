@@ -38,9 +38,9 @@ void main() {
       ),
     ];
 
-    test('フィルタリングとソートが正しく機能すること', () {
+    test('フィルタリングとソートが正しく機能すること', () async {
       final sortSettings = SortSettings(option: SortOption.amount, order: SortOrder.asc);
-      final filtered = service.filterAndSortSubscriptions(
+      final filtered = await service.filterAndSortSubscriptions(
         subscriptions,
         'Net',
         [],
@@ -50,6 +50,7 @@ void main() {
       expect(filtered.length, 1);
       expect(filtered.first.name, 'Netflix');
     });
+
 
     test('月額合計金額が正しく計算されること', () {
       final total = service.calculateMonthlyTotal(subscriptions);

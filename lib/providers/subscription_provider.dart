@@ -59,21 +59,20 @@ class SubscriptionSortSettings extends Notifier<SortSettings> {
 final subscriptionSortOptionProvider = NotifierProvider<SubscriptionSortSettings, SortSettings>(SubscriptionSortSettings.new);
 
 /// フィルタリング・ソート適用後のサブスクリプション一覧を提供するProvider
-final filteredSubscriptionsProvider = Provider<AsyncValue<List<Subscription>>>((ref) {
-  final subscriptionsAsync = ref.watch(subscriptionsProvider);
+final filteredSubscriptionsProvider = FutureProvider<List<Subscription>>((ref) async {
   final searchQuery = ref.watch(subscriptionSearchQueryProvider);
   final selectedTagIds = ref.watch(selectedFilterTagIdsProvider);
   final sortSettings = ref.watch(subscriptionSortOptionProvider);
   final service = ref.watch(subscriptionServiceProvider);
 
-  return subscriptionsAsync.whenData((subscriptions) {
-    return service.filterAndSortSubscriptions(
-      subscriptions,
-      searchQuery,
-      selectedTagIds,
-      sortSettings,
-    );
-  });
+  final subscriptions = await ref.watch(subscriptionsProvider.future);
+  
+  return service.filterAndSortSubscriptions(
+    subscriptions,
+    searchQuery,
+    selectedTagIds,
+    sortSettings,
+  );
 });
 
 /// 月額合計金額を計算するProvider

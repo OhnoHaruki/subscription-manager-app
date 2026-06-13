@@ -1,17 +1,30 @@
+import 'package:flutter/foundation.dart';
 import '../models/subscription.dart';
 import '../models/sort_settings.dart';
 
 class SubscriptionService {
-  List<Subscription> filterAndSortSubscriptions(
+  Future<List<Subscription>> filterAndSortSubscriptions(
     List<Subscription> subscriptions,
     String searchQuery,
     List<String> selectedTagIds,
     SortSettings sortSettings,
-  ) {
-    final query = searchQuery.toLowerCase();
-    
+  ) async {
+    return compute(_filterAndSort, {
+      'subscriptions': subscriptions,
+      'searchQuery': searchQuery,
+      'selectedTagIds': selectedTagIds,
+      'sortSettings': sortSettings,
+    });
+  }
+
+  static List<Subscription> _filterAndSort(Map<String, dynamic> params) {
+    final subscriptions = params['subscriptions'] as List<Subscription>;
+    final searchQuery = (params['searchQuery'] as String).toLowerCase();
+    final selectedTagIds = params['selectedTagIds'] as List<String>;
+    final sortSettings = params['sortSettings'] as SortSettings;
+
     var list = subscriptions.where((sub) {
-      final matchesSearch = sub.name.toLowerCase().contains(query);
+      final matchesSearch = sub.name.toLowerCase().contains(searchQuery);
       final matchesTags = selectedTagIds.isEmpty ||
           selectedTagIds.any((tagId) => sub.tags.contains(tagId));
       return matchesSearch && matchesTags;
@@ -32,6 +45,7 @@ class SubscriptionService {
 
     return list;
   }
+// ... (calculateMonthlyTotal remains)
 
   double calculateMonthlyTotal(List<Subscription> subscriptions) {
     return subscriptions.fold(0.0, (previousValue, sub) {
