@@ -3,6 +3,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../models/subscription.dart';
 import '../models/sort_settings.dart';
 import '../repositories/subscription_repository.dart';
+import '../services/subscription_service.dart';
 
 /// Supabaseクライアントを提供するProvider
 final supabaseProvider = Provider<SupabaseClient>((ref) {
@@ -12,6 +13,10 @@ final supabaseProvider = Provider<SupabaseClient>((ref) {
 /// SubscriptionRepositoryのインスタンスを提供するProvider
 final subscriptionRepositoryProvider = Provider<SubscriptionRepository>((ref) {
   return SubscriptionRepository(ref.watch(supabaseProvider));
+});
+
+final subscriptionServiceProvider = Provider<SubscriptionService>((ref) {
+  return SubscriptionService();
 });
 
 /// サブスクリプション一覧をリアルタイムで監視するProvider
@@ -56,44 +61,25 @@ final subscriptionSortOptionProvider = NotifierProvider<SubscriptionSortSettings
 /// フィルタリング・ソート適用後のサブスクリプション一覧を提供するProvider
 final filteredSubscriptionsProvider = Provider<AsyncValue<List<Subscription>>>((ref) {
   final subscriptionsAsync = ref.watch(subscriptionsProvider);
-  final searchQuery = ref.watch(subscriptionSearchQueryProvider).toLowerCase();
+  final searchQuery = ref.watch(subscriptionSearchQueryProvider);
   final selectedTagIds = ref.watch(selectedFilterTagIdsProvider);
   final sortSettings = ref.watch(subscriptionSortOptionProvider);
+  final service = ref.watch(subscriptionServiceProvider);
 
   return subscriptionsAsync.whenData((subscriptions) {
-    var list = subscriptions.where((sub) {
-      final matchesSearch = sub.name.toLowerCase().contains(searchQuery);
-      final matchesTags = selectedTagIds.isEmpty || 
-          selectedTagIds.any((tagId) => sub.tags.contains(tagId));
-      return matchesSearch && matchesTags;
-    }).toList();
-
-    list.sort((a, b) {
-      int comparison = 0;
-      switch (sortSettings.option) {
-        case SortOption.amount:
-          comparison = a.amount.compareTo(b.amount);
-          break;
-        case SortOption.nextPaymentDate:
-          comparison = a.nextPaymentDate.compareTo(b.nextPaymentDate);
-          break;
-      }
-      return sortSettings.order == SortOrder.asc ? comparison : -comparison;
-    });
-
-    return list;
+    return service.filterAndSortSubscriptions(
+      subscriptions,
+      searchQuery,
+      selectedTagIds,
+      sortSettings,
+    );
   });
 });
 
 /// 月額合計金額を計算するProvider
 final monthlyTotalAmountProvider = Provider<double>((ref) {
   final subscriptions = ref.watch(subscriptionsProvider).value ?? [];
+  final service = ref.watch(subscriptionServiceProvider);
   
-  return subscriptions.fold(0.0, (previousValue, sub) {
-    if (sub.cycle == BillingCycle.monthly) {
-      return previousValue + sub.amount;
-    } else {
-      return previousValue + (sub.amount / 12);
-    }
-  });
+  return service.calculateMonthlyTotal(subscriptions);
 });

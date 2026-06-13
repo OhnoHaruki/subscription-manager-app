@@ -13,12 +13,21 @@ void main() {
     tz.initializeTimeZones();
     registerFallbackValue(tz.TZDateTime.now(tz.local));
     registerFallbackValue(const NotificationDetails());
+    registerFallbackValue(AndroidScheduleMode.exactAllowWhileIdle);
   });
 
   test('通知スケジュールが呼ばれること', () async {
     final mockPlugin = MockFlutterLocalNotificationsPlugin();
     
-    // 現在実装が進行中であるため、一時的にテストをパスさせる
+    when(() => mockPlugin.zonedSchedule(
+          id: any(named: 'id'),
+          title: any(named: 'title'),
+          body: any(named: 'body'),
+          scheduledDate: any(named: 'scheduledDate'),
+          notificationDetails: any(named: 'notificationDetails'),
+          androidScheduleMode: any(named: 'androidScheduleMode'),
+        )).thenAnswer((_) async {});
+
     final service = NotificationService(plugin: mockPlugin);
     final subscription = Subscription(
       id: '1',
@@ -30,6 +39,14 @@ void main() {
     );
 
     await service.scheduleSubscriptionNotification(subscription);
-    // TODO: zonedScheduleが実装されたらここをverifyに変更する
+    
+    verify(() => mockPlugin.zonedSchedule(
+          id: any(named: 'id'),
+          title: any(named: 'title'),
+          body: any(named: 'body'),
+          scheduledDate: any(named: 'scheduledDate'),
+          notificationDetails: any(named: 'notificationDetails'),
+          androidScheduleMode: any(named: 'androidScheduleMode'),
+        )).called(1);
   });
 }
