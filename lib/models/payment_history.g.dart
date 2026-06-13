@@ -9,15 +9,15 @@ part of 'payment_history.dart';
 _PaymentHistory _$PaymentHistoryFromJson(Map<String, dynamic> json) =>
     _PaymentHistory(
       id: json['id'] as String,
-      subscriptionId: json['subscriptionId'] as String,
-      paidDate: DateTime.parse(json['paidDate'] as String),
+      subscriptionId: json['subscription_id'] as String,
+      paidDate: DateTime.parse(json['paid_date'] as String),
       amount: (json['amount'] as num).toInt(),
     );
 
 Map<String, dynamic> _$PaymentHistoryToJson(_PaymentHistory instance) =>
     <String, dynamic>{
       'id': instance.id,
-      'subscriptionId': instance.subscriptionId,
-      'paidDate': instance.paidDate.toIso8601String(),
+      'subscription_id': instance.subscriptionId,
+      'paid_date': instance.paidDate.toIso8601String(),
       'amount': instance.amount,
     };

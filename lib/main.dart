@@ -2,9 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
-import 'screens/subscription_list_screen.dart';
-import 'screens/login_screen.dart';
-import 'providers/auth_provider.dart';
+import 'router.dart';
 import 'providers/theme_provider.dart';
 
 void main() async {
@@ -26,9 +24,11 @@ class MyApp extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final themeMode = ref.watch(themeProvider);
+    final router = ref.watch(routerProvider);
 
-    return MaterialApp(
+    return MaterialApp.router(
       title: 'Subscription Manager',
+      routerConfig: router,
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(
           seedColor: Colors.indigo,
@@ -103,32 +103,6 @@ class MyApp extends ConsumerWidget {
         ),
       ),
       themeMode: themeMode,
-      home: const RootPage(),
-    );
-  }
-}
-
-class RootPage extends ConsumerWidget {
-  const RootPage({super.key});
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final authState = ref.watch(authStateProvider);
-
-    return authState.when(
-      data: (state) {
-        if (state.session != null) {
-          return const SubscriptionListScreen();
-        } else {
-          return const LoginScreen();
-        }
-      },
-      loading: () => const Scaffold(
-        body: Center(child: CircularProgressIndicator()),
-      ),
-      error: (error, stack) => Scaffold(
-        body: Center(child: Text('エラーが発生しました: $error')),
-      ),
     );
   }
 }

@@ -15,7 +15,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$PaymentHistory {
 
- String get id; String get subscriptionId; DateTime get paidDate; int get amount;
+ String get id;@JsonKey(name: 'subscription_id') String get subscriptionId;@JsonKey(name: 'paid_date') DateTime get paidDate; int get amount;
 /// Create a copy of PaymentHistory
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -48,7 +48,7 @@ abstract mixin class $PaymentHistoryCopyWith<$Res>  {
   factory $PaymentHistoryCopyWith(PaymentHistory value, $Res Function(PaymentHistory) _then) = _$PaymentHistoryCopyWithImpl;
 @useResult
 $Res call({
- String id, String subscriptionId, DateTime paidDate, int amount
+ String id,@JsonKey(name: 'subscription_id') String subscriptionId,@JsonKey(name: 'paid_date') DateTime paidDate, int amount
 });
 
 
@@ -153,7 +153,7 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id,  String subscriptionId,  DateTime paidDate,  int amount)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id, @JsonKey(name: 'subscription_id')  String subscriptionId, @JsonKey(name: 'paid_date')  DateTime paidDate,  int amount)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _PaymentHistory() when $default != null:
 return $default(_that.id,_that.subscriptionId,_that.paidDate,_that.amount);case _:
@@ -174,7 +174,7 @@ return $default(_that.id,_that.subscriptionId,_that.paidDate,_that.amount);case 
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  String subscriptionId,  DateTime paidDate,  int amount)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id, @JsonKey(name: 'subscription_id')  String subscriptionId, @JsonKey(name: 'paid_date')  DateTime paidDate,  int amount)  $default,) {final _that = this;
 switch (_that) {
 case _PaymentHistory():
 return $default(_that.id,_that.subscriptionId,_that.paidDate,_that.amount);}
@@ -191,7 +191,7 @@ return $default(_that.id,_that.subscriptionId,_that.paidDate,_that.amount);}
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id,  String subscriptionId,  DateTime paidDate,  int amount)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id, @JsonKey(name: 'subscription_id')  String subscriptionId, @JsonKey(name: 'paid_date')  DateTime paidDate,  int amount)?  $default,) {final _that = this;
 switch (_that) {
 case _PaymentHistory() when $default != null:
 return $default(_that.id,_that.subscriptionId,_that.paidDate,_that.amount);case _:
@@ -206,12 +206,12 @@ return $default(_that.id,_that.subscriptionId,_that.paidDate,_that.amount);case 
 @JsonSerializable()
 
 class _PaymentHistory implements PaymentHistory {
-  const _PaymentHistory({required this.id, required this.subscriptionId, required this.paidDate, required this.amount});
+  const _PaymentHistory({required this.id, @JsonKey(name: 'subscription_id') required this.subscriptionId, @JsonKey(name: 'paid_date') required this.paidDate, required this.amount});
   factory _PaymentHistory.fromJson(Map<String, dynamic> json) => _$PaymentHistoryFromJson(json);
 
 @override final  String id;
-@override final  String subscriptionId;
-@override final  DateTime paidDate;
+@override@JsonKey(name: 'subscription_id') final  String subscriptionId;
+@override@JsonKey(name: 'paid_date') final  DateTime paidDate;
 @override final  int amount;
 
 /// Create a copy of PaymentHistory
@@ -247,7 +247,7 @@ abstract mixin class _$PaymentHistoryCopyWith<$Res> implements $PaymentHistoryCo
   factory _$PaymentHistoryCopyWith(_PaymentHistory value, $Res Function(_PaymentHistory) _then) = __$PaymentHistoryCopyWithImpl;
 @override @useResult
 $Res call({
- String id, String subscriptionId, DateTime paidDate, int amount
+ String id,@JsonKey(name: 'subscription_id') String subscriptionId,@JsonKey(name: 'paid_date') DateTime paidDate, int amount
 });
 
 
