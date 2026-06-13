@@ -5,7 +5,7 @@ part 'subscription.g.dart';
 
 enum BillingCycle { monthly, yearly }
 
-@freezed
+@Freezed(toJson: true)
 sealed class Subscription with _$Subscription {
   const factory Subscription({
     required String id,
