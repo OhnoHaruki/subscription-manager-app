@@ -9,7 +9,7 @@ import 'providers/theme_provider.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await dotenv.load(fileName: ".env");
+  await dotenv.load(fileName: '.env');
 
   // Supabaseの初期化
   await Supabase.initialize(

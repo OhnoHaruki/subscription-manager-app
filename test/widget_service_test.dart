@@ -9,7 +9,8 @@ void main() {
     final List<MethodCall> log = <MethodCall>[];
     
     // Channel をモック化
-    const MethodChannel('home_widget').setMockMethodCallHandler((MethodCall methodCall) async {
+    const channel = MethodChannel('home_widget');
+    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger.setMockMethodCallHandler(channel, (MethodCall methodCall) async {
       log.add(methodCall);
       return null;
     });
