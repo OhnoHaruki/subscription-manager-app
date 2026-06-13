@@ -83,6 +83,7 @@ void main() {
         overrides: [
           supabaseProvider.overrideWithValue(mockSupabase),
           subscriptionsProvider.overrideWith((ref) => Stream.value([])),
+          filteredSubscriptionsProvider.overrideWith((ref) => Future.value([])),
           paymentMethodsProvider.overrideWith((ref) => Stream.value([])),
           profileProvider.overrideWith((ref) => Future.value(Profile(
                 id: 'user_id',

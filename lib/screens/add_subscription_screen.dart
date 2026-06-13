@@ -296,7 +296,13 @@ class _CommaTextInputFormatter extends TextInputFormatter {
     TextEditingValue oldValue,
     TextEditingValue newValue,
   ) {
-    if (newValue.text.isEmpty) {
+    // 1. 全角数字を半角に変換
+    String text = newValue.text.replaceAllMapped(
+      RegExp(r'[０-９]'),
+      (match) => String.fromCharCode(match.group(0)!.codeUnitAt(0) - 0xFEE0),
+    );
+
+    if (text.isEmpty) {
       return newValue.copyWith(
         text: '',
         selection: const TextSelection.collapsed(offset: 0),
@@ -304,7 +310,7 @@ class _CommaTextInputFormatter extends TextInputFormatter {
     }
 
     // 数字以外を除去
-    final cleanText = newValue.text.replaceAll(',', '');
+    final cleanText = text.replaceAll(',', '').replaceAll(RegExp(r'[^0-9]'), '');
     final intValue = int.tryParse(cleanText);
     if (intValue == null) return oldValue;
 
